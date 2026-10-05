@@ -48,6 +48,8 @@ def copy_work_files(work: Path, entry: Path, out: Path):
                  "prestashop-install.json"):
         if (work / name).is_file():
             shutil.copy2(work / name, out / "design" / name)
+    if (work / "content").is_dir():
+        shutil.copytree(work / "content", out / "design" / "content", dirs_exist_ok=True)
     if (work / "renders").is_dir():
         shutil.copytree(work / "renders", out / "renders", dirs_exist_ok=True)
     if (work / "assets").is_dir():

@@ -75,12 +75,27 @@ def check_assets(root: Path, errors: list):
                 errors.append(f"asset-map: falta {info['dest']}")
 
 
+def check_logo_and_content(root: Path, errors: list):
+    amap = root / "design" / "asset-map.json"
+    if amap.is_file():
+        logo = json.loads(amap.read_text()).get("logo")
+        if not logo:
+            errors.append("asset-map: no hay logo (¿el diseño no lo trae o falló la descarga?)")
+        elif not (root / logo["dest"]).is_file():
+            errors.append(f"falta el logo {logo['dest']}")
+    content = root / "design" / "content"
+    plan = root / "docs" / "04-plan-prestashop.md"
+    if content.is_dir() and any(content.glob("*.html")) and plan.is_file():
+        if "CMS" not in plan.read_text(encoding="utf-8"):
+            errors.append("docs/04: hay contenido legal en design/content pero el plan no menciona las páginas CMS")
+
+
 def main():
     if len(sys.argv) != 2 or not Path(sys.argv[1]).is_dir():
         sys.exit(__doc__)
     root = Path(sys.argv[1])
     errors = []
-    for check in (check_files, check_placeholders, check_tokens, check_assets):
+    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content):
         check(root, errors)
     for err in errors:
         print("✗", err)

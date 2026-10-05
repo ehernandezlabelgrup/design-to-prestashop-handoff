@@ -18,7 +18,11 @@ Ningún texto visible va escrito a pelo. Incluye el contenido de botones, títul
 - Una cadena, un significado: no concatenes frases traducidas; usa variables.
 - El texto fuente va en inglés, que es la convención de PrestaShop, y se traduce desde Internacional > Traducciones. Confirma el idioma fuente con el equipo antes de empezar.
 - El **contenido editable** (CMS, bloques de texto, banners) no son cadenas de interfaz: se gestiona desde el Back Office, multiidioma, no con `{l}`.
+- **Páginas legales y de contenido** (aviso legal, privacidad, cookies, condiciones, envíos, FAQ, sobre nosotros): son páginas **CMS** editables desde el Back Office, no cadenas `{l}`. El texto de ejemplo del diseño está en `design/content/*.html`; se usa para sembrar las páginas CMS (multiidioma) y el cliente lo sustituye por el texto jurídico definitivo.
 - `docs/05-textos.md` lista los textos del diseño con el dominio propuesto. Es una propuesta que hay que revisar.
+
+## 2 bis. Logo
+Se usa el logo del diseño, que está en `assets/logo/`. No se redibuja ni se escribe como texto. Se sube en el Back Office (Diseño > Tema y logo) y la plantilla lo pinta con los datos de la tienda (`$shop.logo_details`), sin `<img>` fijo en el `.tpl`. Se ajustan las dimensiones en `custom.css`.
 
 ## 3. Arquitectura
 - No se toca el core. Se usan hooks, overrides de plantilla del tema y módulos.

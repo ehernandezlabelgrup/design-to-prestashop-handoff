@@ -14,7 +14,9 @@ Catálogo de partida para `docs/04-plan-prestashop.md`. Son hipótesis: se valid
 | Newsletter | `ps_emailsubscription` |
 | Cuenta, login, registro, recuperar contraseña | Plantillas de `customer/` del tema |
 | Carrito y checkout | Plantillas de `checkout/` del tema. Pasarelas: módulos de pago |
-| Páginas de políticas, envíos y contacto | CMS + `contactform` |
+| Páginas legales, envíos, FAQ y sobre nosotros | Páginas CMS sembradas con el texto de `design/content/*.html` |
+| Contacto | `contactform` |
+| Logo | Back Office > Diseño > Tema y logo; `$shop.logo_details` en el header |
 | Banners de envío gratis o avisos | Contenido editable en Back Office |
 | Textos de interfaz | Siempre traducciones: `{l s='…' d='Shop.Theme.X'}` o `trans()` |
 | Estilos | Siempre `assets/css/custom.css`, sin estilo en línea |

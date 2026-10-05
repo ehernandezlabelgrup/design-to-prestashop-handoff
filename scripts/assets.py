@@ -2,12 +2,18 @@
 """Recoge las imágenes que usa el diseño, las copia a assets/img (WebP) y
 escribe asset-map.json (origen -> destino, dimensiones, proporción).
 
+Si analyze.py ya dejó structure.json en --out, también guarda el logo del diseño
+(descargándolo si es una URL remota, o copiándolo si es local o SVG en línea) en
+assets/logo/ y lo registra en asset-map.json bajo la clave "logo".
+
 Uso: assets.py --entry /ruta/index.html --out ./handoff
 """
 import argparse
 import json
 import re
 import sys
+import urllib.request
+from urllib.parse import urlparse
 from math import gcd
 from pathlib import Path
 
@@ -42,6 +48,30 @@ def convert(src: Path, dest_dir: Path) -> dict:
             "ratio": ratio(width, height), "format": "webp"}
 
 
+DOWNLOAD_TIMEOUT = 20
+USER_AGENT = "Mozilla/5.0 (design-to-prestashop-handoff)"
+
+
+def save_logo(logo: dict, root: Path, out: Path) -> dict:
+    """Guarda el logo en assets/logo/. Devuelve su registro para asset-map.json."""
+    dest_dir = out / "assets" / "logo"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    record = {"width": logo.get("width"), "height": logo.get("height"), "alt": logo.get("alt")}
+    if logo["kind"] == "svg":
+        (dest_dir / "logo.svg").write_text(logo["markup"], encoding="utf-8")
+        return {**record, "dest": "assets/logo/logo.svg", "source": "inline-svg"}
+    src = logo["src"]
+    suffix = Path(urlparse(src).path).suffix or ".png"
+    dest = dest_dir / f"logo{suffix}"
+    if src.startswith(("http://", "https://")):
+        request = urllib.request.Request(src, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT) as response:
+            dest.write_bytes(response.read())
+    else:
+        dest.write_bytes((root / src.lstrip("/")).read_bytes())
+    return {**record, "dest": f"assets/logo/{dest.name}", "source": src}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--entry", required=True, type=Path)
@@ -59,8 +89,20 @@ def main():
             continue
         mapping[ref] = convert(src, dest_dir)
 
+    logo_record = None
+    structure = args.out / "structure.json"
+    if structure.is_file():
+        logo = json.loads(structure.read_text()).get("logo")
+        if logo:
+            try:
+                logo_record = save_logo(logo, root, args.out)
+            except Exception as err:  # red caída, 404… el handoff debe avisar, no fallar en silencio
+                print(f"AVISO: no se pudo guardar el logo ({err})", file=sys.stderr)
+        else:
+            print("AVISO: no se detectó logo en el diseño", file=sys.stderr)
+
     (args.out / "asset-map.json").write_text(json.dumps(
-        {"assets": mapping, "missing": missing}, indent=1, ensure_ascii=False))
+        {"assets": mapping, "missing": missing, "logo": logo_record}, indent=1, ensure_ascii=False))
     print(f"OK · {len(mapping)} imágenes · {len(missing)} no encontradas")
     if missing:
         print("No encontradas:", ", ".join(missing[:10]), file=sys.stderr)

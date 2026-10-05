@@ -9,6 +9,7 @@ Uso:
 Salida en --out:
   raw-tokens.json   colores, tipografías, espaciados, radios, sombras, movimiento
   structure.json    rutas, secciones, landmarks, componentes repetidos, estados
+  content/<ruta>.html  texto de las páginas de contenido/legales (limpio, para sembrar el CMS)
   texts.json        textos visibles y atributos (alt, placeholder, aria-label, title) por ruta
   inline-styles.json  estilos en línea del fuente (hay que convertirlos a clases)
   renders/          capturas de página completa por ruta y viewport
@@ -128,6 +129,48 @@ SHEETS_JS = r"""
 """
 
 
+# JS: localiza el logo (img de la cabecera o SVG en línea).
+LOGO_JS = r"""
+() => {
+  const sels = ['header img[alt*="logo" i]', 'header a[href="#/inicio"] img', 'header [class*="logo" i] img',
+                'img[src*="logo" i]', 'header img'];
+  for (const sel of sels) {
+    const el = document.querySelector(sel);
+    if (!el) continue;
+    const r = el.getBoundingClientRect();
+    return { kind: 'img', src: el.getAttribute('src'), alt: el.getAttribute('alt'),
+             width: Math.round(r.width), height: Math.round(r.height) };
+  }
+  const svg = document.querySelector('header a svg, header [class*="logo" i] svg');
+  if (svg) { const r = svg.getBoundingClientRect();
+    return { kind: 'svg', markup: svg.outerHTML, width: Math.round(r.width), height: Math.round(r.height) }; }
+  return null;
+}
+"""
+
+# JS: extrae el texto de la página como HTML limpio (sin clases, estilos ni controles).
+CONTENT_JS = r"""
+() => {
+  const KEEP = new Set(['H1','H2','H3','H4','H5','H6','P','UL','OL','LI','A','STRONG','EM','B','I','BR',
+    'TABLE','THEAD','TBODY','TR','TH','TD','BLOCKQUOTE']);
+  const DROP = new Set(['HEADER','FOOTER','NAV','SCRIPT','STYLE','SVG','BUTTON','FORM','INPUT','SELECT','TEXTAREA','IMG']);
+  const walk = node => {
+    if (node.nodeType === 3) return node.textContent.replace(/\s+/g, ' ');
+    if (node.nodeType !== 1 || DROP.has(node.tagName)) return '';
+    const inner = [...node.childNodes].map(walk).join('');
+    if (!KEEP.has(node.tagName)) return inner;
+    if (node.tagName === 'BR') return '<br>';
+    const href = node.tagName === 'A' && node.getAttribute('href') ? ' href="' + node.getAttribute('href') + '"' : '';
+    return '<' + node.tagName.toLowerCase() + href + '>' + inner.trim() + '</' + node.tagName.toLowerCase() + '>\n';
+  };
+  const root = document.querySelector('main') || document.getElementById('app') || document.body;
+  return walk(root).replace(/\n{3,}/g, '\n\n').trim();
+}
+"""
+
+CONTENT_ROUTE_RE = re.compile(r"legal|privacy|privacidad|cookie|terms|condicion|aviso|politic|envio|devoluc|shipping|returns|faq|sobre|about", re.I)
+
+
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -166,9 +209,11 @@ def merge_counters(target: dict, source: dict):
                 bucket[k] = bucket.get(k, 0) + v
 
 
-def analyze(entry: Path, out: Path, routes: list, viewports: list):
+def analyze(entry: Path, out: Path, routes: list, viewports: list, content_re=CONTENT_ROUTE_RE):
     out.mkdir(parents=True, exist_ok=True)
     (out / "renders").mkdir(exist_ok=True)
+    (out / "content").mkdir(exist_ok=True)
+    logo = None
     entry_text = entry.read_text(encoding="utf-8", errors="replace")
     route_list = detect_routes(entry_text, routes)
     server = start_server(entry.parent)
@@ -192,6 +237,11 @@ def analyze(entry: Path, out: Path, routes: list, viewports: list):
                 page.screenshot(path=str(out / "renders" / f"{label.replace('/', '_')}-{width}.png"),
                                 full_page=True)
                 data = page.evaluate(COLLECT_JS)
+                if logo is None:
+                    logo = page.evaluate(LOGO_JS)
+                if content_re.search(route) and width == max(int(v.split("x")[0]) for v in viewports):
+                    html = page.evaluate(CONTENT_JS)
+                    (out / "content" / f"{label.replace('/', '_')}.html").write_text(html + "\n", encoding="utf-8")
                 merge_counters(agg, data["stats"])
                 for entry_text_item in data["texts"]:
                     kind, _, value = entry_text_item.partition("|")
@@ -207,6 +257,7 @@ def analyze(entry: Path, out: Path, routes: list, viewports: list):
         browser.close()
     server.shutdown()
 
+    structure["logo"] = logo
     tokens["consoleErrors"] = sorted(set(console_errors))
     (out / "raw-tokens.json").write_text(json.dumps(tokens, indent=1, ensure_ascii=False))
     (out / "structure.json").write_text(json.dumps(structure, indent=1, ensure_ascii=False))
@@ -224,11 +275,13 @@ def main():
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--routes", default="", help="rutas hash separadas por coma (auto-detecta si se omite)")
     ap.add_argument("--viewports", default=DEFAULT_VIEWPORTS)
+    ap.add_argument("--content-routes", default="", help="regex de rutas de contenido/legales a exportar (por defecto: legal, privacidad, cookies, condiciones, envíos, faq, sobre…)")
     args = ap.parse_args()
     if not args.entry.is_file():
         sys.exit(f"No existe el HTML de entrada: {args.entry}")
     routes = [r for r in args.routes.split(",") if r]
-    done = analyze(args.entry.resolve(), args.out, routes, args.viewports.split(","))
+    content_re = re.compile(args.content_routes, re.I) if args.content_routes else CONTENT_ROUTE_RE
+    done = analyze(args.entry.resolve(), args.out, routes, args.viewports.split(","), content_re)
     print(f"OK · rutas analizadas: {', '.join(r or 'index' for r in done)} · salida: {args.out}")
 
 

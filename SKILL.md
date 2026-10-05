@@ -26,7 +26,7 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    python3 scripts/analyze.py --entry <index.html> --out <work>
    python3 scripts/assets.py  --entry <index.html> --out <work>
    ```
-   Requiere Python con `playwright` (Chromium) y `Pillow`. Detecta las rutas hash, renderiza cada página en 1440 y 390 px y escribe `raw-tokens.json`, `structure.json`, `texts.json`, `inline-styles.json`, `renders/` y `asset-map.json`. Revisa que no haya `consoleErrors` y mira las capturas.
+   Requiere Python con `playwright` (Chromium) y `Pillow`. Detecta las rutas hash, renderiza cada página en 1440 y 390 px y escribe `raw-tokens.json`, `structure.json`, `texts.json`, `inline-styles.json`, `renders/` y `asset-map.json`. Además: el **logo** del diseño (descargado a `assets/logo/` aunque sea una URL remota o un SVG en línea) y el **texto de las páginas legales y de contenido** en `content/*.html` (para sembrar las páginas CMS). Si el aviso dice que no hay logo o falla la descarga, resuélvelo con el usuario antes de seguir. Revisa que no haya `consoleErrors` y mira las capturas.
    **La detección automática de rutas solo ve los enlaces `href="#/…"` literales.** En un SPA, lee la función del router del HTML (busca `location.hash`) y vuelve a lanzar con `--routes ruta1,ruta2/sub,…` para incluir las rutas dinámicas (ficha de producto, pasos de cuenta, checkout, confirmación…). Comprueba que el número de capturas coincide con las páginas del diseño.
    Si quien ejecuta la skill tiene PrestaShop instalado (lo normal), léelo también para fundamentar `docs/04` en datos reales y no en hipótesis:
    ```
@@ -43,6 +43,7 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    - `docs/02`: color, tipografía, retícula, componentes repetidos y sus estados.
    - `docs/03`: valores literales de `transitions`, `keyframes`, `:hover` y `:focus`.
    - `docs/04`: tabla pieza → solución usando `reference/prestashop-mapping.md`. Siempre como hipótesis.
+   - `docs/04` incluye también la sección «Páginas CMS y logo».
    - `docs/05-textos.md`: textos de `texts.json` agrupados, con dominio de traducción propuesto.
    - `CLAUDE.md`: `SOURCE_PRIORITY` (vista de escritorio > móvil > estados > docs), `HOW_TO_READ_SOURCE` (según el formato del HTML), `PROJECT_DESCRIPTION` y `DEMO_CONTENT_NOTE`.
    - Estilos en línea del diseño (`inline-styles.json`): no se copian; se describen como clases en `docs/02`.
