@@ -11,7 +11,7 @@ from pathlib import Path
 HEX_RE = re.compile(r"#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b")
 REQUIRED_FILES = ["CLAUDE.md", "PROMPT-INICIAL.md", "tokens.css", "docs/00-reglas-equipo.md",
                   "docs/01-concepto-y-arquitectura.md", "docs/02-sistema-visual.md",
-                  "docs/03-interacciones.md", "docs/04-plan-prestashop.md", "docs/05-textos.md"]
+                  "docs/03-interacciones.md", "docs/04-plan-prestashop.md", "docs/05-textos.md", "docs/06-validacion-por-pagina.md", "validation/progreso.md"]
 REQUIRED_PHRASES = {
     "CLAUDE.md": ["custom.css", "traducciones", "00-reglas-equipo"],
     "docs/00-reglas-equipo.md": ["custom.css", "{l s=", "trans("],

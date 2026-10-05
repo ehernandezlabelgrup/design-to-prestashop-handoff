@@ -38,7 +38,8 @@ Traduce el diseño a Smarty, CSS y JS nativo. **No** portes el código del proto
 1. Inspecciona la instalación local: versión exacta, tema activo, módulos instalados, PHP y estructura de `themes/`.
 2. Confirma en la documentación oficial de PrestaShop {{PS_VERSION}} cómo funcionan los temas hijos y el tema base ({{BASE_THEME}}) y qué hooks hay. Las propuestas de `docs/04-plan-prestashop.md` son **hipótesis** que hay que validar en la instalación real.
 3. Propón el plan de archivos y espera la aprobación antes de generar código.
-4. Trabaja por fases: tokens y base → header y navegación → componentes repetidos → páginas en el orden de `docs/01` → móvil → interacciones → QA.
+4. **Se maqueta y se valida página a página** (`docs/06-validacion-por-pagina.md`): cada página pasa `scripts/compare.py` y la revisión humana antes de empezar la siguiente. El estado está en `validation/progreso.md`.
+5. Trabaja por fases: tokens y base → header y navegación → componentes repetidos → páginas en el orden de `docs/01` → móvil → interacciones → QA.
 
 ## Contenido de demostración
 {{DEMO_CONTENT_NOTE}}

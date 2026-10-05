@@ -1,0 +1,24 @@
+# 06 · Validación página a página
+
+El equipo no maqueta todo y valida al final: **se maqueta y se valida una página cada vez**, y no se empieza la siguiente hasta cerrar la anterior.
+
+## Ciclo por página
+1. Elige la siguiente página de `validation/progreso.md` (orden recomendado: componentes comunes del header y el footer, home, listado, ficha, carrito y checkout, cuenta, páginas de contenido).
+2. Maqueta la página con las reglas de `00-reglas-equipo.md`.
+3. Ejecuta la comprobación automática, en la raíz del handoff:
+   ```
+   python3 <skill>/scripts/compare.py --handoff . --route <ruta> --url <url-local-de-la-página>
+   ```
+   Genera `validation/<ruta>-informe.md` y una imagen lado a lado (diseño | real | diferencia) para escritorio y móvil.
+4. Corrige hasta que no haya ❌ en las comprobaciones automáticas.
+5. Haz la revisión humana del informe: parecido con el diseño, textos traducidos (cambia de idioma), interacciones según `03-interacciones.md`, sin regresiones.
+6. Marca la página como ✅ en `validation/progreso.md`, haz commit (en inglés, `<type>: <description>`) y pasa a la siguiente.
+
+## Qué comprueba lo automático
+Sin estilo en línea ni `<style>` en el body, `custom.css` cargado y el último, un solo H1, imágenes con dimensiones y `alt`, objetivos táctiles de 44 px o más, sin errores de consola y diferencia visual contenida.
+
+## Qué NO comprueba (lo revisa una persona)
+Que todos los textos salgan del sistema de traducciones, la fidelidad fina del diseño, el comportamiento de las interacciones y el contenido editable del Back Office.
+
+## Definición de hecho de una página
+Sin ❌ automáticos, revisión humana completa, commit hecho y registrada en `validation/progreso.md`.

@@ -48,6 +48,13 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
 4. **Validar**: `python3 scripts/validate.py <handoff-tienda>`. Corrige hasta que diga OK.
 5. **Entregar**: resumen breve al usuario y, tras su visto bueno, zip sin `.DS_Store`.
 
+## Después del handoff: validación página a página
+El equipo maqueta y valida una página cada vez. El handoff trae `docs/06-validacion-por-pagina.md` y `validation/progreso.md` (una fila por ruta). Para cada página maquetada:
+```
+python3 scripts/compare.py --handoff <handoff-tienda> --route <ruta> --url <url-de-la-página-en-local>
+```
+Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automáticas (sin estilo en línea, `custom.css` el último, un H1, alt, objetivos táctiles) y escribe el informe y el estado. La revisión humana (textos traducidos, interacciones, fidelidad) sigue siendo obligatoria.
+
 ## Cosas que no hay que hacer
 - No inventar concepto, marca ni funcionalidades que el diseño no muestre.
 - No incluir material de clientes ni credenciales en la skill. Esta skill es pública; los handoffs generados se guardan fuera del repositorio.

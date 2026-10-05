@@ -10,6 +10,7 @@ Rellena los placeholders conocidos. Los que dependen del diseño ({{SOURCE_PRIOR
 `<!-- MODEL: ... -->` los rellena el modelo después; validate.py avisa si quedan.
 """
 import argparse
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -53,6 +54,18 @@ def copy_work_files(work: Path, entry: Path, out: Path):
         shutil.copytree(work / "assets", out / "assets", dirs_exist_ok=True)
 
 
+def write_progress(work: Path, out: Path):
+    structure = work / "structure.json"
+    if not structure.is_file():
+        return
+    routes = list(json.loads(structure.read_text()).get("routes", {}))
+    lines = ["# Progreso de validación por página", "",
+             "| Ruta | Informe | Estado |", "|---|---|---|"]
+    lines += [f"| {r} | validation/{r.replace('/', '_')}-informe.md | ⬜ pendiente |" for r in routes]
+    (out / "validation").mkdir(exist_ok=True)
+    (out / "validation" / "progreso.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--work", required=True, type=Path)
@@ -74,6 +87,7 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     copy_templates(args.out, values)
     copy_work_files(args.work, args.entry.resolve(), args.out)
+    write_progress(args.work, args.out)
     print(f"OK · paquete creado en {args.out}. Faltan los huecos del modelo (ver validate.py).")
 
 
