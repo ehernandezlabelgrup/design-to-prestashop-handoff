@@ -23,3 +23,4 @@
 - Los criterios (`acceptance`) deben ser comprobables por una persona mirando el navegador.
 
 - `checkProfile`: comprobación automática específica del paso en lugar de la comparación de página. Hoy existe `tokens` (tokens en `:root`, marcador de `custom.css`, fuentes autoalojadas con swap, sin Google Fonts, `body` con Archivo).
+- `checkProfile: "styles"` + `assertions`: el paso se comprueba contrastando estilos calculados con valores **sacados del diseño** (mide los elementos del diseño de origen con Playwright). Cada aserción: `{"name": "...", "selector": "<css de la superficie de prueba>", "state": "hover|focus" (opcional), "props": {"background-color": "rgb(20, 20, 20)", ...}}`. Es lo que comprueba los pasos de base.

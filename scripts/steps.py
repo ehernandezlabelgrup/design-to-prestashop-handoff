@@ -286,6 +286,40 @@ def check_tokens(url: str) -> list:
     return rows
 
 
+def check_styles(url: str, assertions: list) -> list:
+    """Contrasta estilos calculados con los valores del diseño. Cada aserción:
+    {"name": ..., "selector": ..., "state": "hover|focus" (opcional), "props": {"propiedad-css": "valor esperado"}}."""
+    from playwright.sync_api import sync_playwright
+    rows = []
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(args=["--no-sandbox"])
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page.goto(url, wait_until="networkidle")
+        page.evaluate("document.fonts.ready")
+        for item in assertions:
+            target = page.locator(item["selector"]).first
+            if target.count() == 0:
+                rows.append((item["name"], False, f"no existe «{item['selector']}»"))
+                continue
+            state = item.get("state")
+            if state == "hover":
+                target.hover()
+                page.wait_for_timeout(250)
+            elif state == "focus":
+                target.focus()
+                page.keyboard.press("Shift+Tab")
+                page.keyboard.press("Tab")
+                page.wait_for_timeout(500)
+            got = target.evaluate("(el, props) => Object.fromEntries(props.map(p => [p, getComputedStyle(el).getPropertyValue(p).trim()]))",
+                                  list(item["props"]))
+            if state == "hover":
+                page.mouse.move(0, 0)
+            bad = {k: f"{got[k]} ≠ {v}" for k, v in item["props"].items() if got[k] != v}
+            rows.append((item["name"], not bad, "; ".join(f"{k}: {m}" for k, m in bad.items())))
+        browser.close()
+    return rows
+
+
 def cmd_check(args):
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
@@ -293,6 +327,14 @@ def cmd_check(args):
     if group and group_mode(state, group) == "complete":
         step = next((s for s in members(steps, group) if s["kind"] == "page"), step)
         step = {**step, "liveSelector": ""}   # página completa: sin selector de elemento
+    if step.get("checkProfile") == "styles":
+        rows = check_styles(args.url, step.get("assertions", []))
+        for name, ok, detail in rows:
+            print(f"{'✅' if ok else '❌'} {name}" + ("" if ok else f" — {detail}"))
+        good = all(ok for _, ok, _ in rows)
+        set_status(state, step["id"], CHECK_OK if good else CHECK_FAIL, "automático OK" if good else "ver salida de check")
+        print(f"\n{sum(ok for _, ok, _ in rows)}/{len(rows)} aserciones. Siguiente: " + ("enseña al maquetador qué revisar y espera su OK." if good else "corrige los ❌ y vuelve a ejecutar check."))
+        return
     if step.get("checkProfile") == "tokens":
         rows = check_tokens(args.url)
         for name, ok, detail in rows:
