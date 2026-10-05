@@ -13,7 +13,7 @@ Para cada imagen del diseño se midió su tamaño real en pantalla (escritorio y
 
 ## Cómo configurarlo
 1. En el Back Office: Diseño > Ajustes de imágenes. Crea cada tipo con el nombre y tamaño de la tabla y marca las entidades.
-2. Declara los tipos también en `config/theme.yml` del tema (`global.image_types`) para que viajen con el tema. Verifica la clave exacta en la documentación de PrestaShop 9.2.
+2. Declara los tipos también en `config/theme.yml` del tema (`global_settings.image_types`; un tema hijo necesita un theme.yml completo: parte de una copia del del padre) para que viajen con el tema. Verifica la clave exacta en la documentación de PrestaShop 9.2.
 3. Regenera las miniaturas existentes (Ajustes de imágenes > Regenerar miniaturas).
 4. Define el ajuste de cada tipo (`image_fitment` en PrestaShop 9.2: `fit`, `crop` o `bound`; verifica los valores en la instalación). Con `crop` la imagen llena la caja y se recorta; con `fit` se escala y puede dejar bandas. Elígelo según cómo pinte el diseño la imagen (`object-fit: cover` → `crop`) y sube las imágenes origen con la proporción del diseño.
 5. Comprueba formato WebP/AVIF en Parámetros de la tienda > Imágenes y la calidad.

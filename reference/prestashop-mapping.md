@@ -27,3 +27,8 @@ Base: Hummingbird (PS 9). Para 8.x, tema `classic` y sus plantillas equivalentes
 Verificado en una instalación 9.2.0 (solo lectura): **lo carga el core**, no Hummingbird. `FrontController::setMedia()` lo registra con prioridad 1000 (`theme.css` va con 50), buscándolo primero en el tema hijo y luego en el padre, y solo si el fichero existe. Hummingbird no trae ninguno, así que basta con crear `themes/<tema>/assets/css/custom.css`. No hace falta tocar `theme.yml` ni registrarlo otra vez. Revísalo igualmente en la instalación del proyecto, porque puede cambiar entre versiones.
 
 Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene favoritos, hay que decidir cómo se resuelven.
+
+## Crear un tema hijo en PrestaShop 9.2 (verificado en 9.2.0)
+- El validador de temas (`ThemeValidator`) exige en el `theme.yml` del hijo: `name`, `display_name`, `version`, `author.name`, `meta.compatibility.from`, `meta.available_layouts`, `theme_settings.default_layout` y los tipos base de imagen bajo **`global_settings.image_types`** (no `global:`). Además, `preview.png`.
+- Receta que funciona: copiar el `theme.yml` del padre, poner `parent: <padre>`, cambiar `name`/`display_name`/`version`/`author` y añadir los tipos propios (con `image_fitment: crop|fit|bound`) al final de `global_settings.image_types`.
+- Activarlo: `php bin/console prestashop:theme:enable <tema>` (como el usuario del servidor web). Crea los tipos de imagen en la base de datos. Se revierte activando el tema anterior.
