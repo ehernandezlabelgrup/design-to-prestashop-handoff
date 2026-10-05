@@ -45,3 +45,11 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 - `_clearCache()` es protegido: dentro del módulo se usa; desde fuera, `Tools::clearAllCache()` o `Tools::clearSmartyCache()`.
 - Los mensajes editables de un módulo (multiidioma) se guardan con `Configuration::updateValue($key, [id_lang => texto])` y se leen con `Configuration::get($key, $idLang)`.
 - Un módulo de contenido simple en `displayBanner` (barra superior): `registerHook('displayBanner')` + plantilla en `views/templates/hook/` + formulario `HelperForm` con campos `lang => true`.
+
+## Cabecera y traducciones en PrestaShop 9.2 (verificado)
+- **Sticky**: el `<header id="header" class="header">` del layout envuelve todo el header (banner incluido). Para que la cabecera se quede fija sin arrastrar la barra superior, `.header { display: contents; }` y `position: sticky` en el bloque propio.
+- **`{hook h='displayTop' mod='ps_mainmenu'}`** pinta solo ese módulo en ese hook: sirve para colocar menú, buscador, cesta y cuenta en una cabecera propia. En el override de `ps_mainmenu.tpl` los elementos de primer nivel están en `$menu.children` (cada uno con `label`, `url`, `type` —`cms-page`, `category`…— y `current`). Los elementos del menú se fijan en `MOD_BLOCKTOPMENU_ITEMS` (p. ej. `CAT3,CAT4,CAT5,CMS6`).
+- **Cesta**: se conservan `.blockcart` y `data-refresh-url` en `ps_shoppingcart.tpl`; el JS del módulo sustituye ese bloque al actualizar y el contador se actualiza sin recargar.
+- **Traducciones personalizadas** (`tools/ps_set_translations.php`): en la tabla `translation` el dominio va **sin puntos** (`Shop.Theme.Global` → `ShopThemeGlobal`), la clave es el texto fuente y `theme` es NULL. Si el dominio lleva puntos, la traducción no se aplica.
+- **El índice de búsqueda no se rellena solo** con productos creados por script: hay que llamar a `Search::indexation(true)`; si no, el buscador devuelve 0 resultados.
+- Los `.html` bajo `themes/` están bloqueados por `.htaccess`; el JS propio va en `assets/js/custom.js` (el core lo carga solo, como `custom.css`).

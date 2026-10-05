@@ -8,6 +8,7 @@
  *        --data=/ruta/legible/translations.json [--iso=es]
  *
  * translations.json: {"Shop.Theme.Global": {"Main menu": "Menú principal", "Cart": "Cesta"}, ...}
+ * El dominio se escribe con puntos (Shop.Theme.Global); la herramienta lo guarda sin ellos, como PrestaShop.
  * La clave es el texto FUENTE (el de la plantilla, normalmente en inglés) y el valor es el texto del
  * diseño en el idioma --iso (por defecto «es»). Las cadenas de la skill llevan el texto del diseño tal cual.
  */
@@ -25,7 +26,9 @@ if (!$langId) { fwrite(STDERR, "Idioma no encontrado\n"); exit(1); }
 $data = json_decode(file_get_contents($opts['data']), true);
 $db = Db::getInstance();
 $created = $updated = 0;
-foreach ($data as $domain => $pairs) {
+foreach ($data as $domainName => $pairs) {
+    // En la tabla `translation` el dominio se guarda sin puntos: «Shop.Theme.Global» -> «ShopThemeGlobal».
+    $domain = str_replace('.', '', $domainName);
     foreach ($pairs as $key => $text) {
         $where = 'id_lang=' . $langId . ' AND `key`="' . pSQL($key) . '" AND domain="' . pSQL($domain) . '"';
         $id = $db->getValue('SELECT id_translation FROM ' . _DB_PREFIX_ . 'translation WHERE ' . $where);

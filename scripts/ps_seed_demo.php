@@ -128,3 +128,6 @@ foreach ($data['products'] as $product) {
     $line = seedProduct($product, $categoryIds, $context);
     echo $line ?? "ya existe {$product['reference']}", "\n";
 }
+// Sin esto el buscador no encuentra los productos nuevos (el índice de búsqueda no se rellena solo).
+Search::indexation(true);
+echo "índice de búsqueda regenerado\n";
