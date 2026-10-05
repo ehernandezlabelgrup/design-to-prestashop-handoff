@@ -12,6 +12,7 @@ Rellena los placeholders conocidos. Los que dependen del diseño ({{SOURCE_PRIOR
 import argparse
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -68,24 +69,17 @@ def copy_work_files(work: Path, entry: Path, out: Path):
         shutil.copytree(work / "assets", out / "assets", dirs_exist_ok=True)
 
 
-def write_progress(work: Path, out: Path, with_demo: bool):
-    structure = work / "structure.json"
-    if not structure.is_file():
-        return
-    routes = list(json.loads(structure.read_text()).get("routes", {}))
-    prep = ["Tipos de imagen creados (docs/07)", "Logo subido y páginas CMS creadas (docs/04)"]
-    if with_demo:
-        prep += ["Categorías demo creadas (docs/08)", "Productos demo creados (docs/08)"]
-    lines = ["# Progreso de validación", "", "## Fase 0 · Preparación (antes de maquetar)", "",
-             "| Paso | Estado |", "|---|---|"]
-    lines += [f"| {step} | ⬜ pendiente |" for step in prep]
-    lines += ["", "## Páginas", "", "| Ruta | Informe | Estado |", "|---|---|---|"]
-    lines += [f"| {r} | validation/{r.replace('/', '_')}-informe.md | ⬜ pendiente |" for r in routes]
-    lines += ["", "## Elementos y componentes (validación elemento por elemento)", "",
-              "Añade una fila por componente al maquetarlo (nombre, selectores, estado). Se valida con `compare.py --element`.", "",
-              "| Elemento | Informe | Estado |", "|---|---|---|"]
-    (out / "validation").mkdir(exist_ok=True)
-    (out / "validation" / "progreso.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+def install_tools(out: Path):
+    tools = out / "tools"
+    tools.mkdir(exist_ok=True)
+    for name in ("steps.py", "compare.py"):
+        shutil.copy2(SKILL_ROOT / "scripts" / name, tools / name)
+
+
+def build_steps(work: Path, out: Path, demo: str):
+    subprocess.run([sys.executable, str(SKILL_ROOT / "scripts" / "propose_steps.py"), "--work", str(work),
+                    "--out", str(out / "design" / "steps.json"), "--demo-data", demo], check=True)
+    subprocess.run([sys.executable, str(out / "tools" / "steps.py"), "status"], check=True, stdout=subprocess.DEVNULL)
 
 
 def main():
@@ -112,7 +106,8 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     copy_templates(args.out, values, args.demo_data == "yes")
     copy_work_files(args.work, args.entry.resolve(), args.out)
-    write_progress(args.work, args.out, args.demo_data == "yes")
+    install_tools(args.out)
+    build_steps(args.work, args.out, args.demo_data)
     print(f"OK · paquete creado en {args.out}. Faltan los huecos del modelo (ver validate.py).")
 
 

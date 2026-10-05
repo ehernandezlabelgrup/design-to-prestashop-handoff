@@ -11,7 +11,7 @@ Uso (un elemento o componente suelto, para ir elemento por elemento):
 
 Hace capturas de la página real, las compara con renders/<ruta>-<ancho>.png (lado a lado
 y diferencia) y comprueba reglas automáticas. Escribe validation/<ruta>-informe.md y
-actualiza validation/progreso.md. La revisión visual final sigue siendo humana.
+la revisión visual final sigue siendo humana.
 """
 import argparse
 import re
@@ -92,16 +92,6 @@ def write_report(handoff: Path, route: str, url: str, sections: list):
     (out / f"{route.replace('/', '_')}-informe.md").write_text("\n".join(lines), encoding="utf-8")
 
 
-def update_progress(handoff: Path, route: str, all_ok: bool):
-    path = handoff / "validation" / "progreso.md"
-    if not path.is_file():
-        return
-    status = "🟡 automático OK, falta revisión humana" if all_ok else "🔴 con fallos"
-    text = path.read_text(encoding="utf-8")
-    pattern = re.compile(rf"^(\| {re.escape(route)} \|.*?\| )[^|]*( \|)$", re.M)
-    path.write_text(pattern.sub(rf"\g<1>{status}\g<2>", text), encoding="utf-8")
-
-
 ELEMENT_CHECKS_JS = r"""
 (el) => {
   const styled = [el, ...el.querySelectorAll('[style]')].filter(e => e.getAttribute && e.getAttribute('style'));
@@ -170,7 +160,6 @@ def run_element(args):
         browser.close()
     design_server.shutdown()
     write_report(args.handoff, args.element, args.url, sections)
-    update_progress(args.handoff, args.element, all_ok)
     print(f"{'OK' if all_ok else 'FALLOS'} · informe en {out / (args.element + '-informe.md')}")
     sys.exit(0 if all_ok else 1)
 
@@ -219,7 +208,6 @@ def main():
         browser.close()
 
     write_report(args.handoff, args.route, args.url, sections)
-    update_progress(args.handoff, args.route, all_ok)
     print(f"{'OK' if all_ok else 'FALLOS'} · informe en {out / (label + '-informe.md')}")
     sys.exit(0 if all_ok else 1)
 

@@ -49,11 +49,15 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    - `docs/04` incluye también la sección «Páginas CMS y logo».
    - `docs/07-ajustes-imagenes.md`: tipos de imagen a partir de `image-types.md`, con nombre, tamaño, entidades y avisos.
    - Si hay datos demo: transforma `demo-candidates.json` en `design/demo-data.json` (formato en `reference/demo-data-schema.md`, categorías y productos, con referencia `DEMO-…`), rellena `docs/08-datos-demo.md` y genera los CSV con `python3 scripts/demo_data_csv.py --demo <handoff>/design/demo-data.json --out <handoff>/design/demo-csv --image-base-url <url>`.
+   - `design/steps.json` y `docs/09-plan-por-pasos.md`: el scaffold deja un esqueleto (fase 0, pre-header, header, footer y una página por ruta, con `confirm: true` donde hay duda). Complétalo mirando las renders: confirma o borra el pre-header, divide las páginas complejas en secciones (cada una con su `designSelector`, que debe existir: `python3 <handoff>/tools/steps.py verify`), pon `liveSelector`, `url` y criterios de revisión comprobables. Formato en `reference/steps-schema.md`.
    - `docs/05-textos.md`: textos de `texts.json` agrupados, con dominio de traducción propuesto.
    - `CLAUDE.md`: `SOURCE_PRIORITY` (vista de escritorio > móvil > estados > docs), `HOW_TO_READ_SOURCE` (según el formato del HTML), `PROJECT_DESCRIPTION` y `DEMO_CONTENT_NOTE`.
    - Estilos en línea del diseño (`inline-styles.json`): no se copian; se describen como clases en `docs/02`.
 4. **Validar**: `python3 scripts/validate.py <handoff-tienda>`. Corrige hasta que diga OK.
 5. **Entregar**: el handoff queda como **carpeta** (sin zip) dentro del proyecto donde el equipo va a maquetar. Resumen breve al usuario y su visto bueno. Si la carpeta se copia entre equipos, que no lleve `.DS_Store`.
+
+## Modo guiado: maquetar paso a paso
+El handoff trae `tools/steps.py` y `tools/compare.py`, así que el equipo no necesita la skill para maquetar. El protocolo está en el `CLAUDE.md` del handoff: Claude anuncia cada paso («empezamos por el pre-header»), lo maqueta, lanza la comprobación, dice al maquetador qué revisar y **espera su OK** antes de aprobarlo y pasar al siguiente (header, footer, páginas y secciones…). Nunca se avanza ni se aprueba sin el OK explícito.
 
 ## Orden de trabajo del equipo
 **Fase 0, antes de maquetar nada:** tipos de imagen, páginas CMS y logo, y datos demo si se pidieron. Solo entonces empieza la validación página a página.

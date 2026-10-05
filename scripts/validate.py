@@ -11,7 +11,8 @@ from pathlib import Path
 HEX_RE = re.compile(r"#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b")
 REQUIRED_FILES = ["CLAUDE.md", "PROMPT-INICIAL.md", "tokens.css", "docs/00-reglas-equipo.md",
                   "docs/01-concepto-y-arquitectura.md", "docs/02-sistema-visual.md",
-                  "docs/03-interacciones.md", "docs/04-plan-prestashop.md", "docs/05-textos.md", "docs/06-validacion-por-pagina.md", "docs/07-ajustes-imagenes.md", "validation/progreso.md"]
+                  "docs/03-interacciones.md", "docs/04-plan-prestashop.md", "docs/05-textos.md", "docs/06-validacion-por-pagina.md", "docs/07-ajustes-imagenes.md", "docs/09-plan-por-pasos.md", "validation/progreso.md",
+                  "tools/steps.py", "tools/compare.py", "design/steps.json"]
 REQUIRED_PHRASES = {
     "CLAUDE.md": ["custom.css", "traducciones", "00-reglas-equipo"],
     "docs/00-reglas-equipo.md": ["custom.css", "{l s=", "trans("],
@@ -114,12 +115,32 @@ def check_demo_data(root: Path, errors: list):
                       if not (root / "design" / "source" / img).is_file())
 
 
+def check_steps(root: Path, errors: list):
+    path = root / "design" / "steps.json"
+    if not path.is_file():
+        return
+    steps = json.loads(path.read_text(encoding="utf-8")).get("steps", [])
+    ids = [s["id"] for s in steps]
+    errors.extend(f"steps.json: id repetido {i}" for i in sorted({i for i in ids if ids.count(i) > 1}))
+    for step in steps:
+        label = f"steps.json[{step['id']}]"
+        if step.get("confirm"):
+            errors.append(f"{label}: tiene confirm:true sin resolver (confírmalo o bórralo)")
+        errors.extend(f"{label}: depende de {d}, que no existe" for d in step.get("dependsOn", []) if d not in ids)
+        if step["kind"] != "prep" and not step.get("acceptance"):
+            errors.append(f"{label}: sin criterios de revisión")
+        if step["kind"] in ("global", "section") and not step.get("designSelector"):
+            errors.append(f"{label}: falta designSelector")
+        if step["kind"] != "prep" and not step.get("route"):
+            errors.append(f"{label}: falta route")
+
+
 def main():
     if len(sys.argv) != 2 or not Path(sys.argv[1]).is_dir():
         sys.exit(__doc__)
     root = Path(sys.argv[1])
     errors = []
-    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content, check_demo_data):
+    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content, check_demo_data, check_steps):
         check(root, errors)
     for err in errors:
         print("✗", err)

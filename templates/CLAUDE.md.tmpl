@@ -33,14 +33,24 @@ Traduce el diseño a Smarty, CSS y JS nativo. **No** portes el código del proto
 - Accesibilidad: elementos reales (`button`, `a`, `label`), objetivos táctiles de 44 px o más, contraste AA, foco visible y ARIA donde corresponda.
 - SEO técnico: HTML semántico, un solo H1 y datos estructurados de producto (Product/Offer).
 
+## Cómo trabajamos: paso a paso (obligatorio)
+La maquetación va **un paso cada vez**, guiando al maquetador. El plan de pasos está en `design/steps.json` y se maneja con `python3 tools/steps.py` (`status`, `next`, `start`, `crop`, `check`, `approve`, `reopen`).
+1. Anuncia el paso («Paso 3/14: empezamos por el header») y explica qué vais a hacer, con el resumen y los criterios de `steps.py next`.
+2. Maqueta **solo** ese paso. No adelantes trabajo de pasos posteriores.
+3. Ejecuta `python3 tools/steps.py check <id> --url <url>` y corrige los ❌.
+4. Dile al maquetador qué revisar (URL, escritorio y móvil, criterios del paso) y **espera su OK**. Mientras no responda, no hagas nada más.
+5. Si pide cambios, se corrigen dentro del mismo paso y se vuelve a comprobar.
+6. Solo con su OK explícito: `python3 tools/steps.py approve <id>`. Entonces propón el siguiente paso y vuelve al punto 1.
+Orden: fase 0 de preparación → elementos globales (pre-header, header, footer) → páginas, dividas en secciones cuando conviene (`docs/09-plan-por-pasos.md`). Nunca se aprueba un paso por tu cuenta ni se salta el orden.
+
 ## Antes de escribir código
 
 1. Inspecciona la instalación local: versión exacta, tema activo, módulos instalados, PHP y estructura de `themes/`.
 2. Confirma en la documentación oficial de PrestaShop {{PS_VERSION}} cómo funcionan los temas hijos y el tema base ({{BASE_THEME}}) y qué hooks hay. Las propuestas de `docs/04-plan-prestashop.md` son **hipótesis** que hay que validar en la instalación real.
 3. Lee `docs/07-ajustes-imagenes.md` y propón, junto con el plan, los tipos de imagen que hay que crear.
    Propón el plan de archivos y espera la aprobación antes de generar código.
-4. **Se maqueta y se valida página a página** (`docs/06-validacion-por-pagina.md`): cada página pasa `scripts/compare.py` y la revisión humana antes de empezar la siguiente. El estado está en `validation/progreso.md`.
-5. Trabaja por fases: **preparación (fase 0)** → tokens y base → header y navegación → componentes repetidos → páginas en el orden de `docs/01` → móvil → interacciones → QA.
+4. **Se maqueta y se valida paso a paso** (protocolo de arriba y `docs/06-validacion-por-pagina.md`). El estado está en `validation/progreso.md`.
+5. Orden general: **preparación (fase 0)** → tokens y base → header y navegación → componentes repetidos → páginas en el orden de `docs/01` → móvil → interacciones → QA.
 
 ## Fase 0 · Preparación (antes de maquetar nada)
 Hasta que esta fase esté cerrada en `validation/progreso.md`, no se maqueta ninguna página.
