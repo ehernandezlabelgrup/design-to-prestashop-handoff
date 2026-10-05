@@ -60,3 +60,11 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 - El texto del enlace estático «Contacto» sale del título de la página `contact` de **Tráfico y SEO** (tabla `meta_lang`), no de las traducciones.
 - Redes: `BLOCKSOCIAL_INSTAGRAM|TWITTER|TIKTOK…` en `Configuration`. El orden de salida lo fija la plantilla; la etiqueta «Twitter» se cambia por «X» con una traducción personalizada de `Modules.Socialfollow.Shop`.
 - El año del copyright: `{$smarty.now|date_format:'%Y'}` dentro de una cadena traducible con `sprintf`.
+
+## Módulo propio con slides editables (jc_homeslider) en PrestaShop 9.2
+- Patrón: `ObjectModel` multiidioma (`'multilang' => true`, tablas `<prefijo>jc_..._slide` y `_lang` creadas en `install()`), listado con `HelperList` (`actions` edit/delete y `active => status`) y formulario con `HelperForm` (campos `lang => true`, `file` para imagen). Se instala con `bin/console prestashop:module install`.
+- **Campos con HTML permitido (`<br>`)**: el tipo debe ser `self::TYPE_HTML`; con `TYPE_STRING` PrestaShop elimina las etiquetas al guardar. El purificador convierte `<br>` en `<br />`: en la plantilla se imprime con `nofilter` (el campo ya está purificado).
+- **Imagen recortada** al subirla: `ImageManager::resize($origen, $destino, $ancho, $alto, 'jpg', false, $error, $w, $h, 5, $sw, $sh, 'crop')`. Devuelve `false` si el archivo no es legible por el usuario del servidor web (permisos de carpeta).
+- **Estado del slider sin `element.style`**: la pista usa `data-slide="N"` y reglas `[data-slide="N"] { transform: translateX(-N00%) }` en custom.css; el JS solo cambia el atributo, `aria-hidden`/`inert` de los slides no visibles y la clase `is-active` de los puntos.
+- **Autoplay accesible**: se pausa con el ratón encima y con la pestaña oculta, y no arranca con `prefers-reduced-motion: reduce` (en ese modo el CSS global de tokens pone `--dur-slide` casi a 0).
+- Un título largo editado en el Back Office puede salirse de su columna: `overflow-wrap: break-word` en el título del slide lo evita.
