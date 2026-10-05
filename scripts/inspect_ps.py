@@ -16,11 +16,13 @@ PARENT_RE = re.compile(r"^parent:\s*(\S+)", re.M)
 
 
 def read_version(root: Path) -> str:
-    kernel = root / "app" / "AppKernel.php"
-    if kernel.is_file():
-        match = VERSION_RE.search(kernel.read_text(errors="replace"))
-        if match:
-            return match.group(1)
+    # PS 1.7/8 declara la versión en AppKernel; PS 9 la mueve a src/Core/Version.php.
+    for rel in ("src/Core/Version.php", "app/AppKernel.php"):
+        path = root / rel
+        if path.is_file():
+            match = VERSION_RE.search(path.read_text(errors="replace"))
+            if match:
+                return match.group(1)
     return "desconocida"
 
 

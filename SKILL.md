@@ -27,6 +27,7 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    python3 scripts/assets.py  --entry <index.html> --out <work>
    ```
    Requiere Python con `playwright` (Chromium) y `Pillow`. Detecta las rutas hash, renderiza cada página en 1440 y 390 px y escribe `raw-tokens.json`, `structure.json`, `texts.json`, `inline-styles.json`, `renders/` y `asset-map.json`. Revisa que no haya `consoleErrors` y mira las capturas.
+   **La detección automática de rutas solo ve los enlaces `href="#/…"` literales.** En un SPA, lee la función del router del HTML (busca `location.hash`) y vuelve a lanzar con `--routes ruta1,ruta2/sub,…` para incluir las rutas dinámicas (ficha de producto, pasos de cuenta, checkout, confirmación…). Comprueba que el número de capturas coincide con las páginas del diseño.
    Si quien ejecuta la skill tiene PrestaShop instalado (lo normal), léelo también para fundamentar `docs/04` en datos reales y no en hipótesis:
    ```
    python3 scripts/inspect_ps.py --ps-root <ruta-prestashop> --out <work>
