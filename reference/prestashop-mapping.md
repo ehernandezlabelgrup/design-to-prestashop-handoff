@@ -38,3 +38,10 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 - `bin/console cache:clear` con 512 MB de memoria se queda sin ella: `php -d memory_limit=-1 bin/console cache:clear`.
 - El CMS elimina `<details>` y `<summary>` al guardar.
 - Si el dominio de la tienda no coincide con el de la URL que abres, PrestaShop redirige a la home y pierde la ruta.
+
+## Módulos propios en PrestaShop 9.2 (verificado)
+- **Instalar con la consola**: `php -d memory_limit=-1 bin/console prestashop:module install <módulo>` (como el usuario del servidor web). Llamar a `$module->install()` desde un script PHP suelto falla porque `Language::updateModulesTranslations()` necesita el contenedor de Symfony y no está arrancado.
+- Si una instalación falla a medias, el módulo queda registrado sin hooks ni configuración y `install` ya no hace nada: `prestashop:module uninstall <módulo>` y volver a instalar.
+- `_clearCache()` es protegido: dentro del módulo se usa; desde fuera, `Tools::clearAllCache()` o `Tools::clearSmartyCache()`.
+- Los mensajes editables de un módulo (multiidioma) se guardan con `Configuration::updateValue($key, [id_lang => texto])` y se leen con `Configuration::get($key, $idLang)`.
+- Un módulo de contenido simple en `displayBanner` (barra superior): `registerHook('displayBanner')` + plantilla en `views/templates/hook/` + formulario `HelperForm` con campos `lang => true`.
