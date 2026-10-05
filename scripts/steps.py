@@ -83,6 +83,14 @@ def status_of(state: dict, step_id: str) -> str:
 
 
 def set_status(state: dict, step_id: str, status: str, note: str = ""):
+    # volver a comprobar un paso ya aprobado no le quita la aprobación: solo anota el resultado
+    if status in (CHECK_OK, CHECK_FAIL) and state.get(step_id, {}).get("status") == APPROVED:
+        previous = state[step_id]
+        suffix = " · recomprobado: " + ("OK" if status == CHECK_OK else "CON FALLOS (reabrir si hace falta)")
+        state[step_id] = {**previous, "note": previous.get("note", "").split(" · recomprobado")[0] + suffix}
+        save_state(state)
+        write_progress(load_steps(), state)
+        return
     state[step_id] = {"status": status, "note": note, "updated": datetime.now(timezone.utc).isoformat(timespec="seconds")}
     save_state(state)
     write_progress(load_steps(), state)
