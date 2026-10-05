@@ -225,9 +225,13 @@ def cmd_start(args):
     group_ids = tuple(s["id"] for s in members(steps, group)) if mode == "complete" else ()
     head = members(steps, group)[0] if mode == "complete" else step
     pending = blockers(steps, state, head, ignore=group_ids)
+    if getattr(args, "ahead", False):
+        # el maquetador revisará más tarde: se puede avanzar sobre pasos que ya pasaron la comprobación automática
+        pending = [sid for sid in pending if status_of(state, sid) != CHECK_OK]
     if pending:
         sys.exit(f"No se puede empezar «{step['id']}»: faltan por aprobar {', '.join(pending)} "
-                 "(si el maquetador quiere saltarlo: `steps.py defer <id>`)")
+                 "(si el maquetador quiere saltarlo: `steps.py defer <id>`; si los revisará después y ya pasaron la "
+                 "comprobación: `steps.py start <id> --ahead`)")
     for sid in group_ids or (step["id"],):
         set_status(state, sid, IN_PROGRESS)
     if mode == "complete":
@@ -486,6 +490,8 @@ def main():
     for name, func in (("start", cmd_start), ("crop", cmd_crop), ("reopen", cmd_reopen)):
         sub.add_parser(name).add_argument("id")
         sub.choices[name].set_defaults(func=func)
+    sub.choices["start"].add_argument("--ahead", action="store_true",
+                                      help="avanzar aunque pasos anteriores esperen la revisión del maquetador (ya pasaron la comprobación)")
     defer = sub.add_parser("defer")
     defer.add_argument("id")
     defer.add_argument("--reason", default="")

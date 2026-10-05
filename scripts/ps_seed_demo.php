@@ -90,6 +90,8 @@ function seedProduct(array $d, array $cat, array $ctx): ?string
     $p->description = $byLang('<p>' . htmlspecialchars($d['description'] ?? '') . '</p>');
     $p->description_short = $byLang('<p>' . htmlspecialchars($d['shortDescription'] ?? '') . '</p>');
     $p->delivery_in_stock = $byLang($d['deliveryInStock'] ?? '');
+    // sin esto PrestaShop ignora el plazo propio del producto y {$product.delivery_information} sale vacío
+    $p->additional_delivery_times = empty($d['deliveryInStock']) ? 1 : 2;
     $p->price = round($d['priceTaxIncl'] / $vat, 6); $p->id_tax_rules_group = $tax;
     $p->id_category_default = $cat[$d['defaultCategory']]; $p->active = 1; $p->visibility = 'both'; $p->condition = 'new';
     $p->available_for_order = 1; $p->show_price = 1; $p->indexed = 1; $p->redirect_type = '404';
