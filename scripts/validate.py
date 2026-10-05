@@ -32,6 +32,11 @@ def known_hexes(raw: dict) -> set:
                 found.update(rgb_to_hex(m) for m in re.findall(r"rgba?\([^)]*\)", value))
     found.update(v.lower() for v in raw.get("stylesheets", {}).get("rootVars", {}).values()
                  if v.startswith("#"))
+    # colores que solo aparecen en reglas :hover/:focus
+    sheets = raw.get("stylesheets", {})
+    for rule in sheets.get("hover", []) + sheets.get("focus", []):
+        found.update(c.lower() for c in re.findall(r"#[0-9a-fA-F]{6}\b", rule))
+        found.update(rgb_to_hex(m) for m in re.findall(r"rgba?\([^)]*\)", rule))
     return found
 
 

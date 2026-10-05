@@ -99,7 +99,7 @@ COLLECT_JS = r"""
   for (const el of all) {
     const cs = getComputedStyle(el);
     if (cs.display === 'none') continue;
-    if (el.children.length === 0 && el.textContent.trim()) texts.add('text|' + el.textContent.trim().replace(/\s+/g, ' ').slice(0, 200));
+    if (el.children.length === 0 && /\p{L}/u.test(el.textContent)) texts.add('text|' + el.textContent.trim().replace(/\s+/g, ' ').slice(0, 1000));
     for (const a of ['placeholder','alt','title','aria-label'])
       if (el.getAttribute(a)) texts.add(a + '|' + el.getAttribute(a).trim().slice(0, 200));
   }
