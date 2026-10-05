@@ -24,3 +24,5 @@
 
 - `checkProfile`: comprobación automática específica del paso en lugar de la comparación de página. Hoy existe `tokens` (tokens en `:root`, marcador de `custom.css`, fuentes autoalojadas con swap, sin Google Fonts, `body` con Archivo).
 - `checkProfile: "styles"` + `assertions`: el paso se comprueba contrastando estilos calculados con valores **sacados del diseño** (mide los elementos del diseño de origen con Playwright). Cada aserción: `{"name": "...", "selector": "<css de la superficie de prueba>", "state": "hover|focus" (opcional), "props": {"background-color": "rgb(20, 20, 20)", ...}}`. Es lo que comprueba los pasos de base.
+- En las aserciones de `styles`, `"before": [{"press": "/"}, {"click": "<css>"}, {"fill": ["<css>", "texto"]}, {"wait": 900}]` recarga la página y ejecuta esas acciones antes de medir; sirve para estados que no están a la vista (buscador abierto, resultados, acordeón desplegado).
+- **Cobertura:** cada interacción de `docs/03` debe estar en la tabla «Cobertura de interacciones» de `docs/09` con su paso; si no tiene, falta un paso.

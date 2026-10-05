@@ -135,12 +135,32 @@ def check_steps(root: Path, errors: list):
             errors.append(f"{label}: falta route")
 
 
+def check_interaction_coverage(root: Path, errors: list):
+    """Cada interacción de docs/03 (título en negrita al inicio de línea) debe figurar en la tabla de cobertura de docs/09."""
+    docs3, docs9 = root / "docs" / "03-interacciones.md", root / "docs" / "09-plan-por-pasos.md"
+    if not (docs3.is_file() and docs9.is_file()):
+        return
+    headings = [m.group(1).strip() for m in re.finditer(r"^\*\*([^*\n]+)\*\*", docs3.read_text(encoding="utf-8"), re.M)]
+    plan = docs9.read_text(encoding="utf-8").lower()
+    if "cobertura de interacciones" not in plan:
+        errors.append("docs/09: falta la sección «Cobertura de interacciones (docs/03 → pasos)»")
+        return
+    steps_ids = {s["id"] for s in json.loads((root / "design" / "steps.json").read_text()).get("steps", [])} if (root / "design" / "steps.json").is_file() else set()
+    covered_section = plan.split("cobertura de interacciones", 1)[1]
+    for title in headings:
+        if title.lower() not in covered_section:
+            errors.append(f"docs/09: la interacción «{title}» de docs/03 no está en la tabla de cobertura (¿falta un paso?)")
+    for ref in re.findall(r"`([a-z0-9][a-z0-9-]+)`", covered_section):
+        if ref not in steps_ids and re.fullmatch(r"[a-z]+(-[a-z0-9]+)+", ref) and ref.split("-")[0] in {i.split("-")[0] for i in steps_ids}:
+            errors.append(f"docs/09: la tabla de cobertura cita el paso `{ref}`, que no existe en steps.json")
+
+
 def main():
     if len(sys.argv) != 2 or not Path(sys.argv[1]).is_dir():
         sys.exit(__doc__)
     root = Path(sys.argv[1])
     errors = []
-    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content, check_demo_data, check_steps):
+    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content, check_demo_data, check_steps, check_interaction_coverage):
         check(root, errors)
     for err in errors:
         print("✗", err)

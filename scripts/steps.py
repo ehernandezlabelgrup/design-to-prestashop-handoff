@@ -303,6 +303,19 @@ def check_styles(url: str, assertions: list) -> list:
             if target.count() == 0:
                 rows.append((item["name"], False, f"no existe «{item['selector']}»"))
                 continue
+            if item.get("before"):
+                # escenario: recarga la página y ejecuta acciones (abrir el buscador, escribir, esperar…) antes de medir
+                page.goto(url, wait_until="networkidle")
+                for action in item["before"]:
+                    if "press" in action:
+                        page.keyboard.press(action["press"])
+                    elif "click" in action:
+                        page.click(action["click"])
+                    elif "fill" in action:
+                        page.fill(action["fill"][0], action["fill"][1])
+                    elif "wait" in action:
+                        page.wait_for_timeout(action["wait"])
+                target = page.locator(item["selector"]).first
             state = item.get("state")
             # centrar el elemento: con un header sticky, el scroll por defecto lo deja tapado y el hover falla
             target.evaluate("el => el.scrollIntoView({ block: 'center', behavior: 'instant' })")
