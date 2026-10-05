@@ -1,0 +1,38 @@
+# 00 · Reglas de trabajo del equipo PrestaShop
+
+Estas reglas son innegociables y valen para todo el proyecto. Si una instrucción del diseño las contradice, gana la regla (y se avisa).
+
+## 1. CSS: todo en `custom.css`
+- Todo el CSS va en `themes/{{THEME_SLUG}}/assets/css/custom.css`. Los tokens, en `:root` al principio.
+- **Prohibido el estilo en línea**: ni `style="…"` en `.tpl` ni en JS, ni bloques `<style>` en plantillas.
+- Lo que varía por elemento se resuelve con clases modificadoras (`.bloque--destacado`) o atributos `data-*`.
+- Desde JS se cambian clases o variables CSS, no `element.style`.
+- Se comprueba en la instalación que `custom.css` se carga el último.
+
+## 2. Textos: todo por el sistema de traducciones de PrestaShop
+Ningún texto visible va escrito a pelo. Incluye el contenido de botones, títulos, etiquetas, mensajes de error y de validación, `placeholder`, `alt`, `title`, `aria-label`, textos de emails y meta títulos.
+- **Plantillas Smarty:** `{l s='Add to cart' d='Shop.Theme.Actions'}`. Con variables: `{l s='Hello %name%' sprintf=['%name%' => $name] d='Shop.Theme.Customeraccount'}`. Para un atributo: `placeholder="{l s='Search' d='Shop.Theme.Catalog'}"`.
+- **Módulos (PHP):** `$this->trans('Text', [], 'Modules.Nombremodulo.Shop')`. Para el Back Office del módulo, el dominio `Modules.Nombremodulo.Admin`.
+- **JS:** el JavaScript no contiene cadenas visibles. Se pasan desde Smarty o PHP con `data-*` o con `Media::addJsDef()` ya traducidas.
+- Dominios del tema: `Shop.Theme.*`. Dominios de módulos: `Modules.<Nombre>.Shop|Admin`. Reutiliza los dominios y cadenas que ya existan en el core y en el tema base antes de crear los nuevos.
+- Una cadena, un significado: no concatenes frases traducidas; usa variables.
+- El texto fuente va en inglés, que es la convención de PrestaShop, y se traduce desde Internacional > Traducciones. Confirma el idioma fuente con el equipo antes de empezar.
+- El **contenido editable** (CMS, bloques de texto, banners) no son cadenas de interfaz: se gestiona desde el Back Office, multiidioma, no con `{l}`.
+- `docs/05-textos.md` lista los textos del diseño con el dominio propuesto. Es una propuesta que hay que revisar.
+
+## 3. Arquitectura
+- No se toca el core. Se usan hooks, overrides de plantilla del tema y módulos.
+- Presentación en el tema, funcionalidad en módulos propios, contenido editable en el Back Office.
+- Sin librerías innecesarias (carruseles, UI kits). JS nativo, diferido y por componente. Sin módulos de terceros para resolver detalles visuales.
+
+## 4. Forma de trabajar
+- Se inspecciona la instalación y se valida la documentación oficial antes de escribir código.
+- Se propone el plan de archivos y se espera aprobación antes de generar código.
+- Se trabaja por fases y cada fase se verifica en el navegador, no solo en el código.
+- Se copian los valores exactos del diseño; no se redondean.
+- Commits en inglés con el formato `<type>: <description>`.
+
+## 5. Calidad
+- Rendimiento: WebP/AVIF con `srcset`, `aspect-ratio`, LCP precargado, woff2 con `swap`, animar solo `transform` y `opacity`, respetar `prefers-reduced-motion`.
+- Accesibilidad: elementos reales, objetivos de 44 px o más, contraste AA, foco visible.
+- SEO: HTML semántico, un solo H1 y datos estructurados de producto.

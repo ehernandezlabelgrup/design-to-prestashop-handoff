@@ -1,0 +1,44 @@
+# {{STORE}} · Tema PrestaShop {{PS_VERSION}} — Contexto para Claude Code
+
+Proyecto: {{PROJECT_DESCRIPTION}}
+El diseño está **aprobado**. Ahora toca convertirlo en un tema real para PrestaShop {{PS_VERSION}} (base: {{BASE_THEME}}), después integrarlo y pasar QA.
+
+## Fuente de la verdad (por orden de prioridad)
+
+{{SOURCE_PRIORITY}}
+
+**Copia exactamente los valores** del diseño (tamaños, espaciados, colores, curvas y tiempos de animación). No los redondees ni los sustituyas por valores por defecto de ningún framework. Si un documento de `docs/` y el código del diseño no coinciden, manda el código.
+
+### Cómo leer los fuentes
+{{HOW_TO_READ_SOURCE}}
+
+Traduce el diseño a Smarty, CSS y JS nativo. **No** portes el código del prototipo tal cual (su runtime, sus plantillas JS ni su estilo en línea).
+
+## Reglas de implementación (innegociables)
+
+- **CSS: todo en `custom.css`.** Cada regla de estilo va en `themes/{{THEME_SLUG}}/assets/css/custom.css`, con los tokens en `:root` al principio (parte de `tokens.css`).
+  - **Prohibido el estilo en línea**: ni atributos `style="…"` en plantillas `.tpl` ni en JS, ni bloques `<style>` en las plantillas.
+  - Los valores que cambian por elemento (color de una familia, proporción de una imagen, estado) se expresan con clases modificadoras (`.card--agotado`) o atributos `data-*` con su regla en `custom.css`.
+  - Para animar desde JS, cambia clases o variables CSS en `:root`; no escribas `element.style.x`.
+  - Antes de empezar, comprueba en la instalación real que `custom.css` se carga el último en esta versión y tema base.
+  - El diseño de origen puede traer estilos en línea. Están inventariados en `design/inline-styles.json`: conviértelos en clases, no los copies.
+- **Textos: todo por el sistema de traducciones de PrestaShop.** Ningún texto visible va escrito a pelo: ni en `.tpl` (`{l s='…' d='Shop.Theme.X'}`), ni en módulos (`$this->trans()`), ni en JS (se pasan por `data-*` o `Media::addJsDef()`). Incluye `placeholder`, `alt`, `title`, `aria-label`, errores y emails. Detalle y lista de textos en `docs/00-reglas-equipo.md` y `docs/05-textos.md`.
+- **Lee `docs/00-reglas-equipo.md`: son las reglas de trabajo del equipo y mandan sobre cualquier otra indicación.**
+- No se modifica el core de PrestaShop. Respeta los hooks, los overrides de plantilla del tema y la arquitectura de módulos.
+- Separa la presentación (tema) de la funcionalidad (módulos propios) y que el contenido editable se gestione desde el Back Office.
+- Sin dependencias innecesarias: nada de librerías de carrusel ni de UI kits. JS nativo mínimo, diferido y por componente.
+- No instales módulos de terceros para resolver detalles visuales.
+- Código mantenible: BEM o clases semánticas, tokens CSS en `:root` y comentarios donde algo no sea obvio.
+- Rendimiento: imágenes WebP/AVIF con `srcset`, `aspect-ratio` reservado, `loading="lazy"` excepto el LCP, fuentes autoalojadas en woff2 con `font-display: swap`, animaciones solo con `transform` y `opacity`, y respeto de `prefers-reduced-motion`.
+- Accesibilidad: elementos reales (`button`, `a`, `label`), objetivos táctiles de 44 px o más, contraste AA, foco visible y ARIA donde corresponda.
+- SEO técnico: HTML semántico, un solo H1 y datos estructurados de producto (Product/Offer).
+
+## Antes de escribir código
+
+1. Inspecciona la instalación local: versión exacta, tema activo, módulos instalados, PHP y estructura de `themes/`.
+2. Confirma en la documentación oficial de PrestaShop {{PS_VERSION}} cómo funcionan los temas hijos y el tema base ({{BASE_THEME}}) y qué hooks hay. Las propuestas de `docs/04-plan-prestashop.md` son **hipótesis** que hay que validar en la instalación real.
+3. Propón el plan de archivos y espera la aprobación antes de generar código.
+4. Trabaja por fases: tokens y base → header y navegación → componentes repetidos → páginas en el orden de `docs/01` → móvil → interacciones → QA.
+
+## Contenido de demostración
+{{DEMO_CONTENT_NOTE}}

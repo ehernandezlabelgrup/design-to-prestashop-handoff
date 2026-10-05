@@ -1,0 +1,22 @@
+# Piezas típicas de diseño → solución en PrestaShop 9
+
+Catálogo de partida para `docs/04-plan-prestashop.md`. Son hipótesis: se validan en la instalación real y en la documentación oficial.
+
+| Pieza del diseño | Solución habitual |
+|---|---|
+| Header, buscador, mini-cesta, menú | Plantillas del tema + módulos nativos (`ps_mainmenu`, `ps_searchbar`, `ps_shoppingcart`). Mega menú propio: módulo del equipo |
+| Hero y bloques editoriales | Módulo propio con contenido editable en Back Office, multiidioma |
+| Tarjeta de producto | Un solo parcial del tema (`catalog/_partials/miniatures/product.tpl`) |
+| Listados y filtros | Categoría + `ps_facetedsearch` |
+| Ficha de producto | `catalog/product.tpl` + hooks de producto |
+| Reseñas | Módulo de opiniones del core o propio. No un módulo de terceros solo por estética |
+| Favoritos | Módulo wishlist |
+| Newsletter | `ps_emailsubscription` |
+| Cuenta, login, registro, recuperar contraseña | Plantillas de `customer/` del tema |
+| Carrito y checkout | Plantillas de `checkout/` del tema. Pasarelas: módulos de pago |
+| Páginas de políticas, envíos y contacto | CMS + `contactform` |
+| Banners de envío gratis o avisos | Contenido editable en Back Office |
+| Textos de interfaz | Siempre traducciones: `{l s='…' d='Shop.Theme.X'}` o `trans()` |
+| Estilos | Siempre `assets/css/custom.css`, sin estilo en línea |
+
+Base: Hummingbird (PS 9). Para 8.x, tema `classic` y sus plantillas equivalentes.
