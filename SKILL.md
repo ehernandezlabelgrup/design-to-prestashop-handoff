@@ -8,6 +8,8 @@ description: Convierte uno o varios HTML de diseño (maqueta estática, SPA con 
 Entrada: uno o más HTML de diseño (+ su carpeta de imágenes). Salida: una carpeta `handoff-<tienda>/` (sin zip) que el equipo PrestaShop copia a su instalación y arranca con el `PROMPT-INICIAL.md`.
 
 ## Reglas que el handoff siempre impone
+Además de las dos de abajo: **los módulos los instala y configura Claude** (no el maquetador) y **los textos van exactamente como en el diseño**, con su traducción registrada (`tools/ps_set_translations.php`).
+
 Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 1. **Todo el CSS en `custom.css`**, nunca estilo en línea ni `<style>` en plantillas.
 2. **Todo texto visible por el sistema de traducciones de PrestaShop** (`{l s='…' d='Shop.Theme.X'}`, `$this->trans()`, y en JS solo cadenas pasadas por `data-*` o `Media::addJsDef`).

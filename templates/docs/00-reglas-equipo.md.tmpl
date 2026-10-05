@@ -11,6 +11,7 @@ Estas reglas son innegociables y valen para todo el proyecto. Si una instrucció
 
 ## 2. Textos: todo por el sistema de traducciones de PrestaShop
 Ningún texto visible va escrito a pelo. Incluye el contenido de botones, títulos, etiquetas, mensajes de error y de validación, `placeholder`, `alt`, `title`, `aria-label`, textos de emails y meta títulos.
+- **Textos exactamente como en el diseño.** El texto visible es el del diseño, carácter a carácter (mayúsculas, puntuación, acentos). Las cadenas de las plantillas se escriben con el texto fuente de PrestaShop y se registran con su traducción al idioma del diseño idéntica al texto del diseño (`tools/ps_set_translations.php`, equivalente a Internacional > Traducciones). Nunca se dejan los textos por defecto de PrestaShop o del tema base cuando el diseño dice otra cosa (p. ej. «Cesta», no «Carrito»).
 - **Plantillas Smarty:** `{l s='Add to cart' d='Shop.Theme.Actions'}`. Con variables: `{l s='Hello %name%' sprintf=['%name%' => $name] d='Shop.Theme.Customeraccount'}`. Para un atributo: `placeholder="{l s='Search' d='Shop.Theme.Catalog'}"`.
 - **Módulos (PHP):** `$this->trans('Text', [], 'Modules.Nombremodulo.Shop')`. Para el Back Office del módulo, el dominio `Modules.Nombremodulo.Admin`.
 - **JS:** el JavaScript no contiene cadenas visibles. Se pasan desde Smarty o PHP con `data-*` o con `Media::addJsDef()` ya traducidas.
