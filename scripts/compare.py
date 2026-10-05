@@ -39,7 +39,8 @@ CHECKS_JS = r"""
   return { inlineStyles: styled.length, inlineSamples: styled.slice(0, 8),
     styleBlocks: document.querySelectorAll('body style').length,
     h1: document.querySelectorAll('h1').length, smallTargets: small, imgNoDims: noDims, imgNoAlt: noAlt,
-    customCss: [...document.querySelectorAll('link[rel=stylesheet]')].map(l => l.href).some(h => /custom\.css/.test(h)),
+    customCss: getComputedStyle(document.documentElement).getPropertyValue('--custom-css-loaded').trim() === '1'
+      || [...document.querySelectorAll('link[rel=stylesheet]')].map(l => l.href).some(h => /custom\.css/.test(h)),
     lastCss: ([...document.querySelectorAll('link[rel=stylesheet]')].pop() || {}).href || '' };
 }
 """
@@ -66,9 +67,8 @@ def run_checks(data: dict, console_errors: list) -> list:
     rows = [
         ("Sin estilo en línea", data["inlineStyles"] == 0, f"{data['inlineStyles']} elementos con style"),
         ("Sin <style> en el body", data["styleBlocks"] == 0, f"{data['styleBlocks']} bloques"),
-        ("custom.css cargado", data["customCss"], "no aparece custom.css"),
-        ("custom.css es la última hoja", data["lastCss"].endswith("custom.css") or "custom.css" in data["lastCss"],
-         f"última hoja: {data['lastCss'][-60:]}"),
+                ("custom.css cargado (marcador --custom-css-loaded)", data["customCss"],
+         "añade `:root { --custom-css-loaded: 1; }` al principio de custom.css; con CCC el archivo va dentro del bundle y no se ve como enlace"),
         ("Un solo H1", data["h1"] == 1, f"{data['h1']} H1"),
         ("Imágenes con dimensiones o aspect-ratio", data["imgNoDims"] == 0, f"{data['imgNoDims']} sin"),
         ("Imágenes con alt", data["imgNoAlt"] == 0, f"{data['imgNoAlt']} sin alt"),

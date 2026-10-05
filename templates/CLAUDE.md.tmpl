@@ -20,7 +20,7 @@ Traduce el diseño a Smarty, CSS y JS nativo. **No** portes el código del proto
   - **Prohibido el estilo en línea**: ni atributos `style="…"` en plantillas `.tpl` ni en JS, ni bloques `<style>` en las plantillas.
   - Los valores que cambian por elemento (color de una familia, proporción de una imagen, estado) se expresan con clases modificadoras (`.card--agotado`) o atributos `data-*` con su regla en `custom.css`.
   - Para animar desde JS, cambia clases o variables CSS en `:root`; no escribas `element.style.x`.
-  - Antes de empezar, comprueba en la instalación real que `custom.css` se carga el último en esta versión y tema base.
+  - Antes de empezar, comprueba en la instalación real que `custom.css` se carga el último en esta versión y tema base. Empieza el archivo con `:root { --custom-css-loaded: 1; }` (marcador que usa `tools/compare.py`; con CCC no se ve como `<link>`).
   - El diseño de origen puede traer estilos en línea. Están inventariados en `design/inline-styles.json`: conviértelos en clases, no los copies.
 - **Textos: todo por el sistema de traducciones de PrestaShop.** Ningún texto visible va escrito a pelo: ni en `.tpl` (`{l s='…' d='Shop.Theme.X'}`), ni en módulos (`$this->trans()`), ni en JS (se pasan por `data-*` o `Media::addJsDef()`). Incluye `placeholder`, `alt`, `title`, `aria-label`, errores y emails. Detalle y lista de textos en `docs/00-reglas-equipo.md` y `docs/05-textos.md`.
 - **Lee `docs/00-reglas-equipo.md`: son las reglas de trabajo del equipo y mandan sobre cualquier otra indicación.**

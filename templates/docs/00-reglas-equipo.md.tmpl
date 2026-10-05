@@ -7,7 +7,7 @@ Estas reglas son innegociables y valen para todo el proyecto. Si una instrucció
 - **Prohibido el estilo en línea**: ni `style="…"` en `.tpl` ni en JS, ni bloques `<style>` en plantillas.
 - Lo que varía por elemento se resuelve con clases modificadoras (`.bloque--destacado`) o atributos `data-*`.
 - Desde JS se cambian clases o variables CSS, no `element.style`.
-- Se comprueba en la instalación que `custom.css` se carga el último.
+- Se comprueba en la instalación que `custom.css` se carga el último. Con la concatenación CSS activada (CCC) el archivo va dentro del bundle y no aparece como `<link>`: por eso `custom.css` empieza con `:root { --custom-css-loaded: 1; }`, el marcador que usa `tools/compare.py`.
 
 ## 2. Textos: todo por el sistema de traducciones de PrestaShop
 Ningún texto visible va escrito a pelo. Incluye el contenido de botones, títulos, etiquetas, mensajes de error y de validación, `placeholder`, `alt`, `title`, `aria-label`, textos de emails y meta títulos.
