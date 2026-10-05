@@ -53,3 +53,10 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 - **Traducciones personalizadas** (`tools/ps_set_translations.php`): en la tabla `translation` el dominio va **sin puntos** (`Shop.Theme.Global` → `ShopThemeGlobal`), la clave es el texto fuente y `theme` es NULL. Si el dominio lleva puntos, la traducción no se aplica.
 - **El índice de búsqueda no se rellena solo** con productos creados por script: hay que llamar a `Search::indexation(true)`; si no, el buscador devuelve 0 resultados.
 - Los `.html` bajo `themes/` están bloqueados por `.htaccess`; el JS propio va en `assets/js/custom.js` (el core lo carga solo, como `custom.css`).
+
+## Footer en PrestaShop 9.2 (verificado)
+- Un footer propio se monta con `{hook h='displayFooter' mod='ps_linklist'}` (columnas) y `{hook h='displayFooterBefore' mod='ps_socialfollow'}` (redes, que Hummingbird engancha en `displayFooterBefore`). Se overridea `modules/ps_linklist/views/templates/hook/linkblock.tpl` (variable `$linkBlocks`, con `title` y `links`) y `modules/ps_socialfollow/ps_socialfollow.tpl` (`$social_links`).
+- **Bloques de ps_linklist por script**: `PrestaShop\Module\LinkList\Model\LinkBlock` con `id_hook`, `position`, `name` (por idioma), `content` = `{"cms":[ids],"product":[],"static":["contact"],"category":[ids]}` y `custom_content` = JSON por idioma. Los enlaces salen en el orden cms, producto, estáticos, personalizados y categorías.
+- El texto del enlace estático «Contacto» sale del título de la página `contact` de **Tráfico y SEO** (tabla `meta_lang`), no de las traducciones.
+- Redes: `BLOCKSOCIAL_INSTAGRAM|TWITTER|TIKTOK…` en `Configuration`. El orden de salida lo fija la plantilla; la etiqueta «Twitter» se cambia por «X» con una traducción personalizada de `Modules.Socialfollow.Shop`.
+- El año del copyright: `{$smarty.now|date_format:'%Y'}` dentro de una cadena traducible con `sprintf`.
