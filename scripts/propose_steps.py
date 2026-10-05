@@ -49,7 +49,7 @@ def base_steps(guide_route: str) -> list:
     """Bases de CSS y elementos pequeños, antes de header, footer y páginas (plan inicial)."""
     base = {"kind": "base", "route": guide_route, "dependsOn": [], "url": "<url-de-la-superficie-de-prueba>"}
     return [
-        {**base, "id": "base-tokens", "title": "Base · tokens, fuentes y tipografía",
+        {**base, "id": "base-tokens", "title": "Base · tokens, fuentes y tipografía", "checkProfile": "tokens",
          "summary": "Tokens de tokens.css en :root de custom.css, fuentes autoalojadas (woff2, swap) y tipografía base (body, títulos, enlaces).",
          "docs": ["tokens.css", "docs/02-sistema-visual.md"],
          "acceptance": ["Los tokens están en :root al principio de custom.css con el marcador --custom-css-loaded",

@@ -21,3 +21,5 @@
 - Un paso de sección va **después** de los de las secciones anteriores de su misma página y hereda su `route`; la página entera se comprueba con un paso `page` al final (o se omite si las secciones la cubren).
 - `propose_steps.py --skip-routes indice,guia` excluye rutas que no se maquetan. Los `url` del esqueleto son un marcador `<url-en-PrestaShop>`: hay que sustituirlos.
 - Los criterios (`acceptance`) deben ser comprobables por una persona mirando el navegador.
+
+- `checkProfile`: comprobación automática específica del paso en lugar de la comparación de página. Hoy existe `tokens` (tokens en `:root`, marcador de `custom.css`, fuentes autoalojadas con swap, sin Google Fonts, `body` con Archivo).

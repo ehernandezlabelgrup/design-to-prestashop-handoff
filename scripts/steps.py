@@ -243,6 +243,49 @@ def run_compare(step: dict, url: str) -> int:
     return subprocess.run(cmd).returncode
 
 
+TOKENS_CHECK_JS = r"""
+async () => {
+  await document.fonts.load("700 16px Archivo", "Aa");
+  await document.fonts.load("600 12px 'JetBrains Mono'", "Aa");
+  const root = getComputedStyle(document.documentElement), body = getComputedStyle(document.body);
+  const styles = [...document.styleSheets].flatMap(s => { try { return [...s.cssRules]; } catch (e) { return []; } });
+  const face = styles.filter(r => r.type === CSSRule.FONT_FACE_RULE);
+  return {
+    marker: root.getPropertyValue('--custom-css-loaded').trim(),
+    tokens: ['--color-ink', '--color-paper', '--color-accent', '--font-sans', '--fs-16'].map(n => [n, root.getPropertyValue(n).trim()]),
+    bodyFont: body.fontFamily, bodyBg: body.backgroundColor,
+    faces: face.map(r => r.style.getPropertyValue('font-family').replace(/["']/g, '') + ' ' + r.style.getPropertyValue('font-display')),
+    fontSrcs: face.map(r => r.style.getPropertyValue('src')),
+    archivoOk: document.fonts.check("700 16px Archivo"), monoOk: document.fonts.check("600 12px 'JetBrains Mono'"),
+  };
+}
+"""
+
+
+def check_tokens(url: str) -> list:
+    """Comprobación del paso de tokens y tipografía: tokens, marcador, fuentes del tema y fondo/tipo del body."""
+    from playwright.sync_api import sync_playwright
+    cdn = []
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(args=["--no-sandbox"])
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page.on("request", lambda r: cdn.append(r.url) if "fonts.g" in r.url else None)
+        page.goto(url, wait_until="networkidle")
+        data = page.evaluate(TOKENS_CHECK_JS)
+        browser.close()
+    local = all("../fonts/" in src or "/fonts/" in src for src in data["fontSrcs"]) and bool(data["fontSrcs"])
+    rows = [
+        ("custom.css cargado (marcador)", data["marker"] == "1", "falta :root { --custom-css-loaded: 1; }"),
+        ("Tokens en :root", all(v for _, v in data["tokens"]), ", ".join(n for n, v in data["tokens"] if not v)),
+        ("Fuentes autoalojadas (@font-face con ../fonts/)", local, "las @font-face no apuntan a archivos del tema"),
+        ("font-display: swap en todas", all("swap" in f for f in data["faces"]) and bool(data["faces"]), "; ".join(data["faces"])),
+        ("Archivo y JetBrains Mono disponibles", data["archivoOk"] and data["monoOk"], f"Archivo={data['archivoOk']} Mono={data['monoOk']}"),
+        ("Sin peticiones a Google Fonts", not cdn, "; ".join(cdn[:2])),
+        ("body con Archivo", "Archivo" in data["bodyFont"], data["bodyFont"]),
+    ]
+    return rows
+
+
 def cmd_check(args):
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
@@ -250,6 +293,14 @@ def cmd_check(args):
     if group and group_mode(state, group) == "complete":
         step = next((s for s in members(steps, group) if s["kind"] == "page"), step)
         step = {**step, "liveSelector": ""}   # página completa: sin selector de elemento
+    if step.get("checkProfile") == "tokens":
+        rows = check_tokens(args.url)
+        for name, ok, detail in rows:
+            print(f"{'✅' if ok else '❌'} {name}" + ("" if ok else f" — {detail}"))
+        good = all(ok for _, ok, _ in rows)
+        set_status(state, step["id"], CHECK_OK if good else CHECK_FAIL, "automático OK" if good else "ver salida de check")
+        print("\nSiguiente: " + ("enseña al maquetador qué revisar y espera su OK." if good else "corrige los ❌ y vuelve a ejecutar check."))
+        return
     if step["kind"] == "prep" or not step.get("route"):
         print("Este paso no tiene comprobación automática: se verifica a mano en el Back Office o en la tienda.")
         set_status(state, step["id"], CHECK_OK, "revisión manual")
