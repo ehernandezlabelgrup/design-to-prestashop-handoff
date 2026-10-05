@@ -10,6 +10,7 @@ Salida en --out:
   raw-tokens.json   colores, tipografías, espaciados, radios, sombras, movimiento
   structure.json    rutas, secciones, landmarks, componentes repetidos, estados
   content/<ruta>.html  texto de las páginas de contenido/legales (limpio, para sembrar el CMS)
+  image-usage.json  uso real de cada imagen (tamaño renderizado, natural, contexto) por ruta y ancho
   texts.json        textos visibles y atributos (alt, placeholder, aria-label, title) por ruta
   inline-styles.json  estilos en línea del fuente (hay que convertirlos a clases)
   renders/          capturas de página completa por ruta y viewport
@@ -94,6 +95,22 @@ COLLECT_JS = r"""
 
   const images = [...document.querySelectorAll('img')].map(i => i.getAttribute('src')).filter(Boolean);
   const actions = [...document.querySelectorAll('[data-a]')].map(e => e.getAttribute('data-a'));
+  // Uso real de cada imagen (img y background-image): tamaño renderizado y natural.
+  const urlOf = v => { const m = /url\(["']?([^"')]+)["']?\)/.exec(v || ''); return m ? m[1] : null; };
+  const ctxOf = e => { const p = e.parentElement; if (!p) return ''; const c = (p.className && typeof p.className === 'string') ? '.' + p.className.trim().split(/\s+/).join('.') : ''; return (p.tagName.toLowerCase() + c).slice(0, 80); };
+  const imageUsage = [];
+  for (const el of all) {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    if (el.tagName === 'IMG' && el.getAttribute('src'))
+      imageUsage.push({ kind: 'img', src: el.getAttribute('src'), w: Math.round(r.width), h: Math.round(r.height),
+        nw: el.naturalWidth, nh: el.naturalHeight, fit: cs.objectFit, ctx: ctxOf(el), alt: el.getAttribute('alt') });
+    const bg = urlOf(cs.backgroundImage);
+    if (bg && !bg.startsWith('data:')) imageUsage.push({ kind: 'bg', src: bg, w: Math.round(r.width), h: Math.round(r.height),
+        nw: 0, nh: 0, fit: cs.backgroundSize, ctx: ctxOf(el), alt: null });
+  }
   // Textos visibles y atributos con texto: todos deben pasar por el sistema de traducciones.
   const texts = new Set();
   for (const el of all) {
@@ -103,7 +120,7 @@ COLLECT_JS = r"""
     for (const a of ['placeholder','alt','title','aria-label'])
       if (el.getAttribute(a)) texts.add(a + '|' + el.getAttribute(a).trim().slice(0, 200));
   }
-  return { stats: out, components, landmarks, images: [...new Set(images)], texts: [...texts],
+  return { stats: out, components, landmarks, images: [...new Set(images)], texts: [...texts], imageUsage,
            actions: [...new Set(actions)], title: document.title,
            docHeight: document.documentElement.scrollHeight };
 }
@@ -219,6 +236,7 @@ def analyze(entry: Path, out: Path, routes: list, viewports: list, content_re=CO
     server = start_server(entry.parent)
     base = f"http://127.0.0.1:{server.server_address[1]}/{entry.name}"
     tokens, structure, texts = {"viewports": {}}, {"routes": {}}, {}
+    image_usage = {}
     console_errors = []
 
     with sync_playwright() as pw:
@@ -243,6 +261,7 @@ def analyze(entry: Path, out: Path, routes: list, viewports: list, content_re=CO
                     html = page.evaluate(CONTENT_JS)
                     (out / "content" / f"{label.replace('/', '_')}.html").write_text(html + "\n", encoding="utf-8")
                 merge_counters(agg, data["stats"])
+                image_usage.setdefault(label, {})[str(width)] = data["imageUsage"]
                 for entry_text_item in data["texts"]:
                     kind, _, value = entry_text_item.partition("|")
                     texts.setdefault(label, {}).setdefault(value, set()).add(kind)
@@ -261,6 +280,7 @@ def analyze(entry: Path, out: Path, routes: list, viewports: list, content_re=CO
     tokens["consoleErrors"] = sorted(set(console_errors))
     (out / "raw-tokens.json").write_text(json.dumps(tokens, indent=1, ensure_ascii=False))
     (out / "structure.json").write_text(json.dumps(structure, indent=1, ensure_ascii=False))
+    (out / "image-usage.json").write_text(json.dumps(image_usage, indent=1, ensure_ascii=False))
     (out / "texts.json").write_text(json.dumps(
         {route: [{"text": t, "kinds": sorted(k)} for t, k in items.items()] for route, items in texts.items()},
         indent=1, ensure_ascii=False))

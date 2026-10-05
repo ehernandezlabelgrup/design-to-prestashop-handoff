@@ -1,0 +1,22 @@
+# 07 · Ajustes de imágenes de PrestaShop
+
+PrestaShop redimensiona cada imagen subida a los **tipos de imagen** definidos en Diseño > Ajustes de imágenes. Estos tipos salen de cómo usa el diseño cada imagen (`design/image-types.json` y `design/image-types.md`). Es una propuesta que hay que validar en la instalación real.
+
+## Cómo se propusieron
+Para cada imagen del diseño se midió su tamaño real en pantalla (escritorio y móvil). Se agruparon por proporción y tamaño. El tamaño del tipo es el ancho máximo en CSS por 2 (pantallas retina), limitado al tamaño natural del archivo origen.
+
+## Tipos a crear
+<!-- MODEL: tabla con nombre del tipo (semántico, p. ej. `card_4x5`), ancho × alto, y a qué entidades se aplica (productos, categorías, fabricantes, proveedores, tiendas). Parte de design/image-types.md, fusiona los casi duplicados y justifica cada uno. Indica los tipos de Hummingbird que se reutilizan y los que se crean nuevos. -->
+
+## Dónde se usa cada tipo
+<!-- MODEL: para cada tipo, en qué componentes y páginas se pinta, y con qué `srcset` y `sizes`. -->
+
+## Cómo configurarlo
+1. En el Back Office: Diseño > Ajustes de imágenes. Crea cada tipo con el nombre y tamaño de la tabla y marca las entidades.
+2. Declara los tipos también en `config/theme.yml` del tema (`global.image_types`) para que viajen con el tema. Verifica la clave exacta en la documentación de PrestaShop 9.2.
+3. Regenera las miniaturas existentes (Ajustes de imágenes > Regenerar miniaturas).
+4. Las imágenes origen se suben con la proporción del diseño: PrestaShop escala, no recorta.
+5. Comprueba formato WebP/AVIF en Parámetros de la tienda > Imágenes y la calidad.
+
+## Avisos
+<!-- MODEL: imágenes del diseño cuya proporción natural no coincide con la caja donde se pintan (design/image-usage.json), imágenes de fondo en CSS que deberían ser <img>, y tipos que quedaron sin uso. -->

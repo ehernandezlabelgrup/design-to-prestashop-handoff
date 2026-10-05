@@ -1,0 +1,25 @@
+# 08 · Datos de demostración (categorías, productos…)
+
+Este handoff incluye datos demo sacados del diseño: `design/demo-data.json`. Sirven para ver el tema con contenido real antes de que el cliente cargue su catálogo.
+
+## Cuándo se crean
+**Antes de empezar a maquetar** (fase 0 de `CLAUDE.md`). El equipo maqueta cada página con el catálogo ya cargado, para revisar el diseño y el flujo con contenido real.
+
+## Reglas
+- Son datos de demostración: se crean con referencia `DEMO-…` para poder localizarlos y borrarlos todos de una vez antes de salir a producción.
+- No se inventa nada que el diseño no muestre.
+- Se crean **después** de configurar los tipos de imagen (`07-ajustes-imagenes.md`), para que las miniaturas se generen bien, y **antes** de maquetar.
+- Orden: categorías, características y atributos, productos con imágenes, y por último el cliente y los pedidos de ejemplo, si los hay.
+- Los textos de los productos y categorías son contenido de catálogo (se guardan en cada idioma desde el Back Office), no cadenas de interfaz.
+
+## Contenido
+<!-- MODEL: resumen de lo que se crea: nº de categorías con su árbol, nº de productos, características, combinaciones, productos agotados, cliente demo. Marca lo que NO se pudo sacar del diseño. -->
+
+## Cómo cargarlo
+<!-- MODEL: propuesta concreta tras inspeccionar la instalación. Opciones habituales:
+     1. Importador CSV del Back Office (Parámetros avanzados > Importar) con design/demo-csv/categories.csv y products.csv, generados con scripts/demo_data_csv.py (las imágenes se descargan por URL: hay que servir design/source/uploads/).
+     2. Webservice de PrestaShop o un script que use las clases del core, si el CSV se queda corto (combinaciones, clientes, pedidos).
+     Elige una, justifícala y describe cómo verificar el resultado. Es una hipótesis a validar. -->
+
+## Cómo borrarlo
+<!-- MODEL: procedimiento para eliminar todo lo creado con referencia DEMO- y las categorías demo. -->

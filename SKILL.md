@@ -19,6 +19,7 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
 - Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
 - Versión de PrestaShop (9 por defecto).
 - Brief o concepto, si existe. Si no existe, no lo inventes.
+- **Pregunta siempre al usuario:** «¿Quieres que el handoff incluya la creación de datos demo (las categorías y los productos de ejemplo del HTML, y si los hay clientes y pedidos)?». Si dice que sí, se pasa `--demo-data yes`. Si no, no se generan.
 
 ## Flujo
 1. **Analizar** (scripts, sin juicio):
@@ -33,9 +34,11 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    python3 scripts/inspect_ps.py --ps-root <ruta-prestashop> --out <work>
    ```
    Escribe `prestashop-install.json` (versión, temas con su padre, módulos). El tema activo no se lee (haría falta la BD): confírmalo en el Back Office. Si no hay instalación, `docs/04` queda como hipótesis.
+   **Ajustes de imágenes:** `python3 scripts/image_types.py --work <work>` propone los tipos de imagen de PrestaShop a partir del tamaño real de cada imagen en el diseño (`image-types.json` y `.md`).
+   **Datos demo (solo si el usuario dijo que sí):** `python3 scripts/find_demo_data.py --entry <index.html> --out <work>` vuelca las variables globales con datos (`demo-candidates.json`). Si el diseño no las expone (const/let), lee el fuente.
 2. **Montar el paquete**:
    ```
-   python3 scripts/scaffold.py --work <work> --entry <index.html> --out <handoff-tienda> --store "<Tienda>" --theme-slug <slug>
+   python3 scripts/scaffold.py --work <work> --entry <index.html> --out <handoff-tienda> --store "<Tienda>" --theme-slug <slug> [--demo-data yes]
    ```
 3. **Redactar** (aquí va el juicio del modelo). Rellena todos los huecos `{{…}}` y `<!-- MODEL: … -->`:
    - `tokens.css`: nombres semánticos; cada hex y cada px tiene que salir de `raw-tokens.json`. Si el diseño usa estilos en línea o no tiene variables, deduce los tokens de los valores más frecuentes y avisa. Anota las discrepancias entre el código y lo que describan los docs.
@@ -44,11 +47,16 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    - `docs/03`: valores literales de `transitions`, `keyframes`, `:hover` y `:focus`.
    - `docs/04`: tabla pieza → solución usando `reference/prestashop-mapping.md`. Siempre como hipótesis.
    - `docs/04` incluye también la sección «Páginas CMS y logo».
+   - `docs/07-ajustes-imagenes.md`: tipos de imagen a partir de `image-types.md`, con nombre, tamaño, entidades y avisos.
+   - Si hay datos demo: transforma `demo-candidates.json` en `design/demo-data.json` (formato en `reference/demo-data-schema.md`, categorías y productos, con referencia `DEMO-…`), rellena `docs/08-datos-demo.md` y genera los CSV con `python3 scripts/demo_data_csv.py --demo <handoff>/design/demo-data.json --out <handoff>/design/demo-csv --image-base-url <url>`.
    - `docs/05-textos.md`: textos de `texts.json` agrupados, con dominio de traducción propuesto.
    - `CLAUDE.md`: `SOURCE_PRIORITY` (vista de escritorio > móvil > estados > docs), `HOW_TO_READ_SOURCE` (según el formato del HTML), `PROJECT_DESCRIPTION` y `DEMO_CONTENT_NOTE`.
    - Estilos en línea del diseño (`inline-styles.json`): no se copian; se describen como clases en `docs/02`.
 4. **Validar**: `python3 scripts/validate.py <handoff-tienda>`. Corrige hasta que diga OK.
 5. **Entregar**: el handoff queda como **carpeta** (sin zip) dentro del proyecto donde el equipo va a maquetar. Resumen breve al usuario y su visto bueno. Si la carpeta se copia entre equipos, que no lleve `.DS_Store`.
+
+## Orden de trabajo del equipo
+**Fase 0, antes de maquetar nada:** tipos de imagen, páginas CMS y logo, y datos demo si se pidieron. Solo entonces empieza la validación página a página.
 
 ## Después del handoff: validación página a página
 El equipo maqueta y valida una página cada vez. El handoff trae `docs/06-validacion-por-pagina.md` y `validation/progreso.md` (una fila por ruta). Para cada página maquetada:

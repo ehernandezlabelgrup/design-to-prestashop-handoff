@@ -37,9 +37,17 @@ Traduce el diseño a Smarty, CSS y JS nativo. **No** portes el código del proto
 
 1. Inspecciona la instalación local: versión exacta, tema activo, módulos instalados, PHP y estructura de `themes/`.
 2. Confirma en la documentación oficial de PrestaShop {{PS_VERSION}} cómo funcionan los temas hijos y el tema base ({{BASE_THEME}}) y qué hooks hay. Las propuestas de `docs/04-plan-prestashop.md` son **hipótesis** que hay que validar en la instalación real.
-3. Propón el plan de archivos y espera la aprobación antes de generar código.
+3. Lee `docs/07-ajustes-imagenes.md` y propón, junto con el plan, los tipos de imagen que hay que crear.
+   Propón el plan de archivos y espera la aprobación antes de generar código.
 4. **Se maqueta y se valida página a página** (`docs/06-validacion-por-pagina.md`): cada página pasa `scripts/compare.py` y la revisión humana antes de empezar la siguiente. El estado está en `validation/progreso.md`.
-5. Trabaja por fases: tokens y base → header y navegación → componentes repetidos → páginas en el orden de `docs/01` → móvil → interacciones → QA.
+5. Trabaja por fases: **preparación (fase 0)** → tokens y base → header y navegación → componentes repetidos → páginas en el orden de `docs/01` → móvil → interacciones → QA.
+
+## Fase 0 · Preparación (antes de maquetar nada)
+Hasta que esta fase esté cerrada en `validation/progreso.md`, no se maqueta ninguna página.
+1. **Tipos de imagen** de PrestaShop, según `docs/07-ajustes-imagenes.md`. No se escriben tamaños a mano en las plantillas: se usan los tipos con `srcset`.
+2. **Páginas CMS** legales y de contenido y **logo**, según `docs/04-plan-prestashop.md`.
+3. **Datos demo.** {{DEMO_DATA_NOTE}}
+   Si los hay, se crean en este orden: tipos de imagen, categorías, productos con imágenes y, al final, cliente y pedidos de ejemplo. Así se maqueta contra contenido real.
 
 ## Contenido de demostración
 {{DEMO_CONTENT_NOTE}}

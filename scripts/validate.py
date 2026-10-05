@@ -11,7 +11,7 @@ from pathlib import Path
 HEX_RE = re.compile(r"#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b")
 REQUIRED_FILES = ["CLAUDE.md", "PROMPT-INICIAL.md", "tokens.css", "docs/00-reglas-equipo.md",
                   "docs/01-concepto-y-arquitectura.md", "docs/02-sistema-visual.md",
-                  "docs/03-interacciones.md", "docs/04-plan-prestashop.md", "docs/05-textos.md", "docs/06-validacion-por-pagina.md", "validation/progreso.md"]
+                  "docs/03-interacciones.md", "docs/04-plan-prestashop.md", "docs/05-textos.md", "docs/06-validacion-por-pagina.md", "docs/07-ajustes-imagenes.md", "validation/progreso.md"]
 REQUIRED_PHRASES = {
     "CLAUDE.md": ["custom.css", "traducciones", "00-reglas-equipo"],
     "docs/00-reglas-equipo.md": ["custom.css", "{l s=", "trans("],
@@ -95,12 +95,31 @@ def check_logo_and_content(root: Path, errors: list):
             errors.append("docs/04: hay contenido legal en design/content pero el plan no menciona las páginas CMS")
 
 
+def check_demo_data(root: Path, errors: list):
+    demo = root / "design" / "demo-data.json"
+    if not demo.is_file():
+        return
+    if not (root / "docs" / "08-datos-demo.md").is_file():
+        errors.append("Hay demo-data.json pero falta docs/08-datos-demo.md")
+    data = json.loads(demo.read_text(encoding="utf-8"))
+    slugs = {c["slug"] for c in data.get("categories", [])}
+    refs = [p["reference"] for p in data.get("products", [])]
+    errors.extend(f"demo-data: referencia repetida {r}" for r in sorted({r for r in refs if refs.count(r) > 1}))
+    for product in data.get("products", []):
+        errors.extend(f"demo-data: {product['reference']} cita la categoría inexistente «{s}»"
+                      for s in product.get("categories", []) if s not in slugs)
+        if not product["reference"].startswith("DEMO-"):
+            errors.append(f"demo-data: {product['reference']} no empieza por DEMO-")
+        errors.extend(f"demo-data: falta la imagen {img}" for img in product.get("images", [])
+                      if not (root / "design" / "source" / img).is_file())
+
+
 def main():
     if len(sys.argv) != 2 or not Path(sys.argv[1]).is_dir():
         sys.exit(__doc__)
     root = Path(sys.argv[1])
     errors = []
-    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content):
+    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content, check_demo_data):
         check(root, errors)
     for err in errors:
         print("✗", err)
