@@ -9,7 +9,13 @@ Comandos (desde la raíz del handoff):
   steps.py check <id> --url <url>      ejecuta la comprobación automática contra PrestaShop
   steps.py approve <id>                da el paso por bueno (solo tras el OK del maquetador)
   steps.py reopen <id>                 vuelve a abrir un paso
+  steps.py defer <id> [--reason ...]   aplaza un paso (solo si el maquetador lo pide); no bloquea los siguientes
+  steps.py group <grupo> --mode elements|complete   cómo se maqueta una página (ver «Modos»)
   steps.py verify                      comprueba que los selectores del diseño existen
+
+Por defecto TODO se maqueta por elementos (un paso cada vez). Opcional: si el maquetador lo pide
+expresamente para una página, `group <página> --mode complete` la junta en un solo paso (y
+`groups` en steps.json puede fijar «ask» para que se le pregunte antes de empezar esa página).
 
 Reglas del protocolo: un paso cada vez; no se empieza el siguiente sin `approve`; y `approve`
 solo se ejecuta cuando el maquetador ha revisado en el navegador y ha dado su OK explícito.
@@ -27,15 +33,38 @@ STEPS_FILE = ROOT / "design" / "steps.json"
 STATE_FILE = ROOT / "validation" / "estado.json"
 PROGRESS_FILE = ROOT / "validation" / "progreso.md"
 PENDING, IN_PROGRESS, CHECK_OK, CHECK_FAIL, APPROVED = "pending", "in_progress", "check_ok", "check_fail", "approved"
+DEFERRED = "deferred"
+SATISFIED = (APPROVED, DEFERRED)
+LOCKED_ELEMENTS = "elements"
 LABELS = {PENDING: "⬜ pendiente", IN_PROGRESS: "🔧 en curso", CHECK_OK: "🟡 automático OK, falta revisión",
-          CHECK_FAIL: "🔴 con fallos", APPROVED: "✅ aprobado"}
+          CHECK_FAIL: "🔴 con fallos", APPROVED: "✅ aprobado", DEFERRED: "⏸ aplazado"}
 VIEWPORTS = (1440, 390)
 
 
-def load_steps() -> list:
+def load_doc() -> dict:
     if not STEPS_FILE.is_file():
         sys.exit(f"Falta {STEPS_FILE}")
-    return json.loads(STEPS_FILE.read_text(encoding="utf-8"))["steps"]
+    return json.loads(STEPS_FILE.read_text(encoding="utf-8"))
+
+
+def load_steps() -> list:
+    return load_doc()["steps"]
+
+
+def group_of(step: dict):
+    """Grupo de una página (sus pasos se maquetan por elementos o completos). None en prep y globales."""
+    if step["kind"] in ("prep", "global"):
+        return None
+    return step.get("group") or step.get("route")
+
+
+def group_mode(state: dict, group: str) -> str:
+    """elements | complete | ask. La home y los globales van siempre por elementos."""
+    return state.get("_groups", {}).get(group) or load_doc().get("groups", {}).get(group) or "elements"
+
+
+def members(steps: list, group: str) -> list:
+    return [s for s in steps if group_of(s) == group]
 
 
 def load_state() -> dict:
@@ -64,11 +93,12 @@ def find(steps: list, step_id: str) -> dict:
     sys.exit(f"No existe el paso «{step_id}». Pasos: {', '.join(s['id'] for s in steps)}")
 
 
-def blockers(steps: list, state: dict, step: dict) -> list:
-    """Pasos anteriores (en orden) o dependencias que aún no están aprobados."""
+def blockers(steps: list, state: dict, step: dict, ignore: tuple = ()) -> list:
+    """Pasos anteriores (en orden) o dependencias que aún no están aprobados ni aplazados."""
     earlier = steps[: steps.index(step)]
-    pending = [s["id"] for s in earlier if status_of(state, s["id"]) != APPROVED]
-    return pending + [d for d in step.get("dependsOn", []) if status_of(state, d) != APPROVED and d not in pending]
+    pending = [s["id"] for s in earlier if status_of(state, s["id"]) not in SATISFIED and s["id"] not in ignore]
+    return pending + [d for d in step.get("dependsOn", [])
+                      if status_of(state, d) not in SATISFIED and d not in pending and d not in ignore]
 
 
 def write_progress(steps: list, state: dict):
@@ -107,29 +137,100 @@ def cmd_status(args):
     steps, state = load_steps(), load_state()
     write_progress(steps, state)
     done = sum(status_of(state, s["id"]) == APPROVED for s in steps)
-    print(f"Progreso: {done}/{len(steps)} pasos aprobados\n")
+    deferred = [s["id"] for s in steps if status_of(state, s["id"]) == DEFERRED]
+    print(f"Progreso: {done}/{len(steps)} pasos aprobados" + (f" · aplazados: {', '.join(deferred)}" if deferred else "") + "\n")
     for index, step in enumerate(steps, 1):
         print(f"{index:>2}. {LABELS[status_of(state, step['id'])]:<34} {step['id']} · {step['title']}")
+
+
+ASK_TEXT = ("Antes de empezar «{g}», pregunta al maquetador: ¿se maqueta por elementos ({n} pasos) o la página completa de golpe?\n"
+            "  → `python3 tools/steps.py group {g} --mode elements`  o  `--mode complete`")
+
+
+def print_group_brief(steps: list, group: str):
+    group_steps = members(steps, group)
+    print(f"\n## Página completa · {group}  ({len(group_steps)} pasos en uno)\n")
+    for step in group_steps:
+        print(f"- **{step['title']}**: {step['summary']}")
+    print("\n**Criterios de revisión (de todos los pasos del grupo):**")
+    seen = []
+    for step in group_steps:
+        for item in step.get("acceptance", []):
+            if item not in seen:
+                seen.append(item)
+                print(f"- [ ] {item}")
+    page = next((s for s in group_steps if s["kind"] == "page"), group_steps[0])
+    print(f"\n**Cuando termines:** `python3 tools/steps.py check {page['id']} --url {page.get('url', '<url>')}`, "
+          "enséñale al maquetador qué revisar y **espera su OK**. Con su OK: `approve` aprueba todo el grupo.")
+
+
+def resolve_target(steps: list, state: dict, step: dict):
+    """Devuelve (mode, group). Si hay que preguntar al maquetador, lo imprime y devuelve None."""
+    group = group_of(step)
+    if not group:
+        return LOCKED_ELEMENTS, None
+    mode = group_mode(state, group)
+    if mode == "ask":
+        print(ASK_TEXT.format(g=group, n=len(members(steps, group))))
+        return None
+    return mode, group
 
 
 def cmd_next(args):
     steps, state = load_steps(), load_state()
     for step in steps:
-        if status_of(state, step["id"]) != APPROVED:
-            print_brief(steps, step)
-            print(f"\nPara empezar: `python3 tools/steps.py start {step['id']}`")
+        if status_of(state, step["id"]) in SATISFIED:
+            continue
+        target = resolve_target(steps, state, step)
+        if target is None:
             return
-    print("Todos los pasos están aprobados. 🎉")
+        mode, group = target
+        if mode == "complete":
+            print_group_brief(steps, group)
+        else:
+            print_brief(steps, step)
+        print(f"\nPara empezar: `python3 tools/steps.py start {step['id']}`")
+        return
+    print("Todos los pasos están aprobados o aplazados. 🎉")
 
 
 def cmd_start(args):
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
-    pending = blockers(steps, state, step)
+    target = resolve_target(steps, state, step)
+    if target is None:
+        return
+    mode, group = target
+    group_ids = tuple(s["id"] for s in members(steps, group)) if mode == "complete" else ()
+    head = members(steps, group)[0] if mode == "complete" else step
+    pending = blockers(steps, state, head, ignore=group_ids)
     if pending:
-        sys.exit(f"No se puede empezar «{step['id']}»: faltan por aprobar {', '.join(pending)}")
-    set_status(state, step["id"], IN_PROGRESS)
-    print_brief(steps, step)
+        sys.exit(f"No se puede empezar «{step['id']}»: faltan por aprobar {', '.join(pending)} "
+                 "(si el maquetador quiere saltarlo: `steps.py defer <id>`)")
+    for sid in group_ids or (step["id"],):
+        set_status(state, sid, IN_PROGRESS)
+    if mode == "complete":
+        print_group_brief(steps, group)
+    else:
+        print_brief(steps, step)
+
+
+def cmd_defer(args):
+    steps, state = load_steps(), load_state()
+    step = find(steps, args.id)
+    set_status(state, step["id"], DEFERRED, args.reason or "aplazado por el maquetador")
+    print(f"⏸ «{step['title']}» aplazado. No bloquea los siguientes; vuelve con `reopen {step['id']}`.")
+
+
+def cmd_group(args):
+    steps, state = load_steps(), load_state()
+    if not members(steps, args.group):
+        sys.exit(f"No hay un grupo «{args.group}». Grupos: {', '.join(sorted({group_of(s) for s in steps if group_of(s)}))}")
+    if args.mode == "complete" and load_doc().get("groups", {}).get(args.group) == LOCKED_ELEMENTS:
+        sys.exit(f"«{args.group}» se maqueta siempre por elementos")
+    state.setdefault("_groups", {})[args.group] = args.mode
+    save_state(state)
+    print(f"«{args.group}» → {args.mode}.")
 
 
 def run_compare(step: dict, url: str) -> int:
@@ -145,13 +246,18 @@ def run_compare(step: dict, url: str) -> int:
 def cmd_check(args):
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
+    group = group_of(step)
+    if group and group_mode(state, group) == "complete":
+        step = next((s for s in members(steps, group) if s["kind"] == "page"), step)
+        step = {**step, "liveSelector": ""}   # página completa: sin selector de elemento
     if step["kind"] == "prep" or not step.get("route"):
         print("Este paso no tiene comprobación automática: se verifica a mano en el Back Office o en la tienda.")
         set_status(state, step["id"], CHECK_OK, "revisión manual")
         return
     code = run_compare(step, args.url)
-    set_status(state, step["id"], CHECK_OK if code == 0 else CHECK_FAIL,
-               "automático OK" if code == 0 else "ver validation/")
+    ids = [s["id"] for s in members(steps, group)] if group and group_mode(state, group) == "complete" else [step["id"]]
+    for sid in ids:
+        set_status(state, sid, CHECK_OK if code == 0 else CHECK_FAIL, "automático OK" if code == 0 else "ver validation/")
     report = f"validation/{step['id']}-informe.md" if step.get("liveSelector") else f"validation/{step['route'].replace('/', '_')}-informe.md"
     print(f"\nInforme: {report}")
     print("Siguiente: " + ("enseña al maquetador qué revisar y espera su OK." if code == 0
@@ -161,11 +267,15 @@ def cmd_check(args):
 def cmd_approve(args):
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
+    group = group_of(step)
+    ids = [s["id"] for s in members(steps, group)] if group and group_mode(state, group) == "complete" else [step["id"]]
     if status_of(state, step["id"]) not in (CHECK_OK, IN_PROGRESS):
         sys.exit(f"«{step['id']}» está en estado {status_of(state, step['id'])}: ejecuta check antes de aprobar")
-    set_status(state, step["id"], APPROVED, args.note or "OK del maquetador")
-    nxt = next((s for s in steps if status_of(load_state(), s["id"]) != APPROVED), None)
-    print(f"✅ «{step['title']}» aprobado." + (f" Siguiente paso: {nxt['id']} · {nxt['title']}." if nxt else " Era el último."))
+    for sid in ids:
+        set_status(state, sid, APPROVED, args.note or "OK del maquetador")
+    nxt = next((s for s in steps if status_of(load_state(), s["id"]) not in SATISFIED), None)
+    what = f"grupo «{group}» ({len(ids)} pasos)" if len(ids) > 1 else f"«{step['title']}»"
+    print(f"✅ {what} aprobado." + (f" Siguiente paso: {nxt['id']} · {nxt['title']}." if nxt else " Era el último."))
 
 
 def cmd_reopen(args):
@@ -236,6 +346,14 @@ def main():
     for name, func in (("start", cmd_start), ("crop", cmd_crop), ("reopen", cmd_reopen)):
         sub.add_parser(name).add_argument("id")
         sub.choices[name].set_defaults(func=func)
+    defer = sub.add_parser("defer")
+    defer.add_argument("id")
+    defer.add_argument("--reason", default="")
+    defer.set_defaults(func=cmd_defer)
+    grp = sub.add_parser("group")
+    grp.add_argument("group")
+    grp.add_argument("--mode", required=True, choices=["elements", "complete"])
+    grp.set_defaults(func=cmd_group)
     check = sub.add_parser("check")
     check.add_argument("id")
     check.add_argument("--url", required=True)

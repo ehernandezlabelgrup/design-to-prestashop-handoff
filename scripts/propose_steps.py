@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Genera un esqueleto de design/steps.json (plan de maquetación paso a paso).
 
-Crea: pasos de preparación (fase 0), los elementos globales (pre-header, header, footer) y un
+Crea: pasos de preparación (fase 0), las bases de CSS (tokens, botones, formularios…), los elementos globales (pre-header, header, footer) y un
 paso por página. NO sabe dividir las páginas en secciones ni conoce los selectores finales:
 eso lo hace el modelo mirando las capturas, editando el JSON (ver reference/steps-schema.md).
 Los pasos con "confirm": true hay que confirmarlos o borrarlos; el validador no deja pasar
@@ -45,6 +45,35 @@ def prep_steps(with_demo: bool) -> list:
     return steps
 
 
+def base_steps(guide_route: str) -> list:
+    """Bases de CSS y elementos pequeños, antes de header, footer y páginas (plan inicial)."""
+    base = {"kind": "base", "route": guide_route, "dependsOn": [], "url": "<url-de-la-superficie-de-prueba>"}
+    return [
+        {**base, "id": "base-tokens", "title": "Base · tokens, fuentes y tipografía",
+         "summary": "Tokens de tokens.css en :root de custom.css, fuentes autoalojadas (woff2, swap) y tipografía base (body, títulos, enlaces).",
+         "docs": ["tokens.css", "docs/02-sistema-visual.md"],
+         "acceptance": ["Los tokens están en :root al principio de custom.css con el marcador --custom-css-loaded",
+                        "Las fuentes salen del tema (woff2 autoalojado, font-display: swap), no de un CDN",
+                        "Cuerpo y títulos con la escala y el interlineado del diseño"]},
+        {**base, "id": "base-botones", "title": "Base · botones y enlaces",
+         "summary": "Botón (variantes y estados), enlace con flecha, botón de icono y badge.",
+         "docs": ["docs/02-sistema-visual.md"],
+         "acceptance": ["Todas las variantes y estados (hover, foco, desactivado) como el diseño", "Sin estilo en línea"]},
+        {**base, "id": "base-formularios", "title": "Base · campos de formulario",
+         "summary": "Inputs, selects, textarea, casillas, listas de opciones, selector de cantidad y estados de error.",
+         "docs": ["docs/02-sistema-visual.md"],
+         "acceptance": ["Campos, casillas y radios como el diseño en reposo, foco, error y desactivado", "Objetivos táctiles de 44 px o más"]},
+        {**base, "id": "base-etiquetas", "title": "Base · etiquetas, chips y avisos",
+         "summary": "Etiqueta de producto, chip de filtro, corazón de favoritos, aviso/CTA y acordeón.",
+         "docs": ["docs/02-sistema-visual.md"],
+         "acceptance": ["Cada elemento y sus estados como el diseño", "El acordeón funciona con teclado"]},
+        {**base, "id": "base-layout", "title": "Base · contenedor, retícula y paneles",
+         "summary": "Contenedor, gutters, puntos de corte, rejilla y panel de resumen sobre Hummingbird.",
+         "docs": ["docs/02-sistema-visual.md"],
+         "acceptance": ["Anchos y gutters como el diseño en escritorio y móvil", "Los puntos de corte coinciden con los del diseño"]},
+    ]
+
+
 def global_steps(first_route: str) -> list:
     base = {"kind": "global", "route": first_route, "dependsOn": [], "url": "/"}
     return [
@@ -84,7 +113,8 @@ def main():
     structure = json.loads((args.work / "structure.json").read_text())
     skip = {r for r in args.skip_routes.split(",") if r}
     routes = [r for r in structure["routes"] if r not in skip]
-    steps = prep_steps(args.demo_data == "yes") + global_steps(routes[0]) + page_steps(routes)
+    guide = next((r for r in structure["routes"] if r in ("guia", "guide", "styleguide")), routes[0])
+    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"steps": steps}, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"OK · esqueleto con {len(steps)} pasos → {args.out}")

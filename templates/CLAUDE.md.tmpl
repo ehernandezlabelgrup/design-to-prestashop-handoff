@@ -41,7 +41,7 @@ La maquetación va **un paso cada vez**, guiando al maquetador. El plan de pasos
 4. Dile al maquetador qué revisar (URL, escritorio y móvil, criterios del paso) y **espera su OK**. Mientras no responda, no hagas nada más.
 5. Si pide cambios, se corrigen dentro del mismo paso y se vuelve a comprobar.
 6. Solo con su OK explícito: `python3 tools/steps.py approve <id>`. Entonces propón el siguiente paso y vuelve al punto 1.
-Orden: fase 0 de preparación → elementos globales (pre-header, header, footer) → páginas, dividas en secciones cuando conviene (`docs/09-plan-por-pasos.md`). Nunca se aprueba un paso por tu cuenta ni se salta el orden.
+Orden: fase 0 de preparación → **bases de CSS** (tokens, fuentes, botones, formularios, etiquetas, layout) → elementos globales (pre-header, header, footer) → páginas, divididas en secciones (`docs/09-plan-por-pasos.md`). Todo va por elementos. Nunca se aprueba un paso por tu cuenta ni se salta el orden.
 
 ## Antes de escribir código
 

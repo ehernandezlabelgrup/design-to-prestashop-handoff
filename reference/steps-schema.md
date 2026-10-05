@@ -13,7 +13,7 @@
 ]}
 ```
 
-- `kind`: `prep` (fase 0, sin comprobación automática), `global` (pre-header, header, footer), `section` (parte de una página) o `page` (página entera).
+- `kind`: `prep` (fase 0, sin comprobación automática), `base` (bases de CSS y elementos pequeños antes de header, footer y páginas: tokens, botones, formularios…), `global` (pre-header, header, footer), `section` (parte de una página) o `page` (página entera).
 - `designSelector`: selector CSS del elemento en el diseño de origen, que **tiene que existir** (`tools/steps.py verify` lo comprueba). `liveSelector`: el equivalente en PrestaShop; si falta, el paso se comprueba como página entera.
 - `url`: ruta de PrestaShop a abrir para comprobarlo (se pasa completa en `check --url`).
 - `dependsOn`: ids que deben estar aprobados. Además, **cada paso exige todos los anteriores aprobados**.
