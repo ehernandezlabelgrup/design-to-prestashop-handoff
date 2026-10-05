@@ -62,6 +62,9 @@ def write_progress(work: Path, out: Path):
     lines = ["# Progreso de validación por página", "",
              "| Ruta | Informe | Estado |", "|---|---|---|"]
     lines += [f"| {r} | validation/{r.replace('/', '_')}-informe.md | ⬜ pendiente |" for r in routes]
+    lines += ["", "## Elementos y componentes (validación elemento por elemento)", "",
+              "Añade una fila por componente al maquetarlo (nombre, selectores, estado). Se valida con `compare.py --element`.", "",
+              "| Elemento | Informe | Estado |", "|---|---|---|"]
     (out / "validation").mkdir(exist_ok=True)
     (out / "validation" / "progreso.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Valida UNA página maquetada en PrestaShop contra el diseño del handoff.
 
-Uso:
+Uso (página completa):
   compare.py --handoff ./handoff-tienda --route inicio --url https://local.test/ [--viewports 1440x900,390x844]
+
+Uso (un elemento o componente suelto, para ir elemento por elemento):
+  compare.py --handoff ./handoff-tienda --route tienda --url https://local.test/tienda \
+             --element tarjeta-producto --design-selector ".ix" --live-selector ".product-miniature"
+  Renderiza el diseño de origen en vivo, captura ese elemento en los dos lados y los compara.
 
 Hace capturas de la página real, las compara con renders/<ruta>-<ancho>.png (lado a lado
 y diferencia) y comprueba reglas automáticas. Escribe validation/<ruta>-informe.md y
@@ -11,6 +16,9 @@ actualiza validation/progreso.md. La revisión visual final sigue siendo humana.
 import argparse
 import re
 import sys
+import threading
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from PIL import Image, ImageChops
@@ -94,13 +102,93 @@ def update_progress(handoff: Path, route: str, all_ok: bool):
     path.write_text(pattern.sub(rf"\g<1>{status}\g<2>", text), encoding="utf-8")
 
 
+ELEMENT_CHECKS_JS = r"""
+(el) => {
+  const styled = [el, ...el.querySelectorAll('[style]')].filter(e => e.getAttribute && e.getAttribute('style'));
+  const small = [...el.querySelectorAll('a,button,input,select')].filter(e => {
+    const r = e.getBoundingClientRect(); return r.width && r.height && (r.width < 44 || r.height < 44); }).length;
+  const noAlt = [...el.querySelectorAll('img')].filter(i => !i.hasAttribute('alt')).length;
+  return { inlineStyles: styled.length, inlineSamples: styled.slice(0, 5).map(e => e.tagName.toLowerCase()),
+           smallTargets: small, imgNoAlt: noAlt, h1: el.querySelectorAll('h1').length };
+}
+"""
+
+
+def serve_design(handoff: Path):
+    root = handoff / "design" / "source"
+    class Quiet(SimpleHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(Quiet, directory=str(root)))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server
+
+
+def find_design_entry(handoff: Path) -> str:
+    htmls = sorted((handoff / "design" / "source").glob("*.html"))
+    return htmls[0].name if htmls else "index.html"
+
+
+def element_rows(data: dict) -> list:
+    return [
+        ("Sin estilo en línea", data["inlineStyles"] == 0, f"{data['inlineStyles']} elementos con style"),
+        ("Imágenes con alt", data["imgNoAlt"] == 0, f"{data['imgNoAlt']} sin alt"),
+        ("Objetivos táctiles ≥ 44 px", data["smallTargets"] == 0, f"{data['smallTargets']} más pequeños"),
+    ]
+
+
+def run_element(args):
+    out = args.handoff / "validation"
+    out.mkdir(exist_ok=True)
+    design_server = serve_design(args.handoff)
+    design_url = f"http://127.0.0.1:{design_server.server_address[1]}/{find_design_entry(args.handoff)}#/{args.route}"
+    sections, all_ok = [], True
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(args=["--no-sandbox"])
+        for vw in args.viewports.split(","):
+            width, height = (int(x) for x in vw.split("x"))
+            shots = {}
+            for side, url, selector in (("design", design_url, args.design_selector), ("live", args.url, args.live_selector)):
+                page = browser.new_page(viewport={"width": width, "height": height})
+                page.goto(url, wait_until="load")
+                page.wait_for_timeout(SETTLE_MS)
+                target = page.locator(selector).first
+                if target.count() == 0:
+                    sys.exit(f"No encuentro «{selector}» en {side} ({url})")
+                path = out / f"{args.element}-{width}-{side}.png"
+                target.screenshot(path=str(path))
+                shots[side] = path
+                if side == "live":
+                    rows = element_rows(target.evaluate(ELEMENT_CHECKS_JS))
+                page.close()
+            pct, a, b, diff = diff_percent(Image.open(shots["design"]), Image.open(shots["live"]))
+            side_by_side(a, b, diff).save(out / f"{args.element}-{width}-comparacion.png")
+            rows.append(("Diferencia visual contenida", pct <= DIFF_WARN_PCT, f"{pct:.1f}%"))
+            extra = f"Diferencia: {pct:.1f}%. Imagen: `{args.element}-{width}-comparacion.png` (diseño | real | diferencia)."
+            sections.append((f"{width} px", rows, extra))
+            all_ok &= all(ok for _, ok, _ in rows)
+        browser.close()
+    design_server.shutdown()
+    write_report(args.handoff, args.element, args.url, sections)
+    update_progress(args.handoff, args.element, all_ok)
+    print(f"{'OK' if all_ok else 'FALLOS'} · informe en {out / (args.element + '-informe.md')}")
+    sys.exit(0 if all_ok else 1)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--handoff", required=True, type=Path)
     ap.add_argument("--route", required=True)
     ap.add_argument("--url", required=True)
     ap.add_argument("--viewports", default=DEFAULT_VIEWPORTS)
+    ap.add_argument("--element", help="nombre del elemento/componente a validar (modo elemento)")
+    ap.add_argument("--design-selector", help="selector CSS del elemento en el diseño de origen")
+    ap.add_argument("--live-selector", help="selector CSS del elemento en PrestaShop")
     args = ap.parse_args()
+    if args.element:
+        if not (args.design_selector and args.live_selector):
+            sys.exit("--element exige --design-selector y --live-selector")
+        run_element(args)
     out = args.handoff / "validation"
     out.mkdir(exist_ok=True)
     label = args.route.replace("/", "_")

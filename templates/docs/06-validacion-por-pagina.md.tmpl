@@ -1,4 +1,4 @@
-# 06 · Validación página a página
+# 06 · Validación página a página y elemento a elemento
 
 El equipo no maqueta todo y valida al final: **se maqueta y se valida una página cada vez**, y no se empieza la siguiente hasta cerrar la anterior.
 
@@ -13,6 +13,14 @@ El equipo no maqueta todo y valida al final: **se maqueta y se valida una págin
 4. Corrige hasta que no haya ❌ en las comprobaciones automáticas.
 5. Haz la revisión humana del informe: parecido con el diseño, textos traducidos (cambia de idioma), interacciones según `03-interacciones.md`, sin regresiones.
 6. Marca la página como ✅ en `validation/progreso.md`, haz commit (en inglés, `<type>: <description>`) y pasa a la siguiente.
+
+## Elemento por elemento
+Para revisar el flujo con más grano, un componente suelto (cabecera, tarjeta de producto, buscador, acordeón…) se puede maquetar y validar antes de montar la página entera:
+```
+python3 <skill>/scripts/compare.py --handoff . --route <ruta-donde-aparece> --url <url-local> \
+    --element <nombre> --design-selector "<selector en el diseño>" --live-selector "<selector en PrestaShop>"
+```
+Renderiza el diseño de origen, captura el elemento en los dos lados y los compara en escritorio y móvil. Registra cada componente en la segunda tabla de `validation/progreso.md`. Una página se da por cerrada cuando están cerrados sus componentes y pasa su propia comprobación.
 
 ## Qué comprueba lo automático
 Sin estilo en línea ni `<style>` en el body, `custom.css` cargado y el último, un solo H1, imágenes con dimensiones y `alt`, objetivos táctiles de 44 px o más, sin errores de consola y diferencia visual contenida.

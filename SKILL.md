@@ -54,7 +54,7 @@ El equipo maqueta y valida una página cada vez. El handoff trae `docs/06-valida
 ```
 python3 scripts/compare.py --handoff <handoff-tienda> --route <ruta> --url <url-de-la-página-en-local>
 ```
-Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automáticas (sin estilo en línea, `custom.css` el último, un H1, alt, objetivos táctiles) y escribe el informe y el estado. La revisión humana (textos traducidos, interacciones, fidelidad) sigue siendo obligatoria.
+Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automáticas (sin estilo en línea, `custom.css` el último, un H1, alt, objetivos táctiles) y escribe el informe y el estado. Se puede validar también **elemento por elemento** (un componente suelto antes de montar la página): añade `--element <nombre> --design-selector "<css>" --live-selector "<css>"`. La revisión humana (textos traducidos, interacciones, fidelidad) sigue siendo obligatoria.
 
 ## Cosas que no hay que hacer
 - No inventar concepto, marca ni funcionalidades que el diseño no muestre.
