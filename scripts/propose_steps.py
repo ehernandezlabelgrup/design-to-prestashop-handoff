@@ -64,7 +64,7 @@ def base_steps(guide_route: str) -> list:
          "docs": ["docs/02-sistema-visual.md"],
          "acceptance": ["Campos, casillas y radios como el diseño en reposo, foco, error y desactivado", "Objetivos táctiles de 44 px o más"]},
         {**base, "id": "base-etiquetas", "title": "Base · etiquetas, chips y avisos",
-         "summary": "Etiqueta de producto, chip de filtro, corazón de favoritos, aviso/CTA y acordeón.",
+         "summary": "Etiqueta de producto, chip de filtro, corazón de favoritos (solo el aspecto: la lógica se conecta en la tarjeta con el módulo nativo blockwishlist, ver reference/prestashop-mapping.md), aviso/CTA y acordeón.",
          "docs": ["docs/02-sistema-visual.md"],
          "acceptance": ["Cada elemento y sus estados como el diseño", "El acordeón funciona con teclado"]},
         {**base, "id": "base-layout", "title": "Base · contenedor, retícula y paneles",

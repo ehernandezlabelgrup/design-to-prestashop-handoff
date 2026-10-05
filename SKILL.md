@@ -10,6 +10,7 @@ Entrada: uno o más HTML de diseño (+ su carpeta de imágenes). Salida: una car
 ## Reglas que el handoff siempre impone
 
 - **Nunca se modifica el código de un módulo de terceros (nativo de PrestaShop o de otro autor).** Todo cambio va como override en el tema hijo (`themes/<tema>/modules/<módulo>/…`), con plugins de Smarty del tema, con hooks, con CSS/JS del tema o con la configuración del propio módulo en el Back Office. Solo se edita el código de los módulos que se crean para el proyecto (`jc_*`).
+- **Favoritos**: si el diseño tiene corazón, hay que mirar el módulo nativo `blockwishlist` (reference/prestashop-mapping.md, «Favoritos con blockwishlist»). Se conecta en la tarjeta de producto, en la vista rápida si el diseño la tiene y en la ficha, y la página de favoritos va en un paso aparte. Nunca se deja un corazón decorativo sin lógica.
 Además de las dos de abajo: **los módulos los instala y configura Claude** (no el maquetador) y **los textos van exactamente como en el diseño**, con su traducción registrada (`tools/ps_set_translations.php`).
 
 Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:

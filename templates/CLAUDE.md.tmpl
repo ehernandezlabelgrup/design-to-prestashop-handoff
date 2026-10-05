@@ -17,6 +17,7 @@ Traduce el diseño a Smarty, CSS y JS nativo. **No** portes el código del proto
 ## Reglas de implementación (innegociables)
 
 - **Nunca se modifica el código de un módulo de terceros (nativo de PrestaShop o de otro autor).** Todo cambio va como override en el tema hijo (`themes/<tema>/modules/<módulo>/…`), con plugins de Smarty del tema, con hooks, con CSS/JS del tema o con la configuración del propio módulo en el Back Office. Solo se edita el código de los módulos que se crean para el proyecto (`jc_*`).
+- **Favoritos**: si el diseño tiene corazón, hay que mirar el módulo nativo `blockwishlist` (reference/prestashop-mapping.md, «Favoritos con blockwishlist»). Se conecta en la tarjeta de producto, en la vista rápida si el diseño la tiene y en la ficha, y la página de favoritos va en un paso aparte. Nunca se deja un corazón decorativo sin lógica.
 
 - **CSS: todo en `custom.css`.** Cada regla de estilo va en `themes/{{THEME_SLUG}}/assets/css/custom.css`, con los tokens en `:root` al principio (parte de `tokens.css`).
   - **Prohibido el estilo en línea**: ni atributos `style="…"` en plantillas `.tpl` ni en JS, ni bloques `<style>` en las plantillas.
