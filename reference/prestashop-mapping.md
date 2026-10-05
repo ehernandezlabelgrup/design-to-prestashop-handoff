@@ -106,3 +106,15 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 - **Contador del header**: plugin de Smarty del tema que cuenta `WishList::getAllProductByCustomer()`; el JS lo actualiza al añadir o quitar.
 - **No se usan** los modales Vue del módulo (elegir o crear lista): el diseño tiene una sola lista. Si el cliente quiere varias listas, es otra decisión.
 - **Página de favoritos**: paso aparte (`pagina-favoritos`): vista con la misma tarjeta del tema, estado vacío del diseño y qué ve un invitado.
+
+## Cesta, listado y comprobación con sesión (aprendido en la práctica)
+- **Choque de clases**: el widget de la cesta del header ya usa `.jc-cart`; la página de cesta usa otro prefijo (`.jc-basket`). Antes de nombrar una clase de página, buscar si el nombre ya existe en `custom.css`.
+- **Selector de cantidad** (`components/qty-input.tpl`): se sustituye en el tema por el del diseño manteniendo `js-increment-button`, `js-decrement-button`, el spinner y los iconos de confirmación (ocultos con CSS); la clase propia se añade a la que pasa la plantilla, no la sustituye.
+- **El JS de Hummingbird refresca la cesta por AJAX**: hay que conservar `.js-cart`, `.js-cart-list`, `.js-cart-item`, `.js-cart-summary`, `.js-cart-detailed-totals`, `.js-cart-voucher`, `data-ps-ref="voucher-*"` y `data-link-action`. Los contenedores vacíos del JS (`.js-cart-update-alert`, `.cart-grid__footer`) añaden huecos en un layout flex: se ocultan con `:not(:has(*))`.
+- **Barra de envío gratis**: umbral en Preferencias de envío (`PS_SHIPPING_FREE_PRICE`; 0 = sin envío gratis). Se pinta con `<progress>` (sin estilo en línea) y un plugin de Smarty que calcula lo que falta con la cesta actual.
+- **Código de descuento**: sin ninguna regla de carrito en la tienda, PrestaShop oculta el campo. Para el prototipo hay que crear la regla del diseño (p. ej. `CORNELLA10`, 10 %).
+- **Límite por persona** («Máximo 2…»): no es nativo. Si el diseño lo pide, decidir con el cliente (módulo con hook de carrito) y anotarlo como desviación hasta entonces.
+- **Facetas (ps_facetedsearch)**: si el diseño solo tiene un filtro (p. ej. «Ocultar agotados»), se crea la plantilla de filtros por código (tabla `layered_filter`, `buildLayeredCategories()`), y el override de `modules/ps_facetedsearch/…/facets.tpl` solo pinta esa faceta dentro de la barra del listado. Los chips de categoría son enlaces con contador real, no facetas. El orden usa `sort_orders` nativo en un `<select>` que emite el evento `updateFacets` del tema.
+- **`theme.yml` heredado**: `global_settings.modules.to_disable` del padre desactiva `blockwishlist` (y otros) cada vez que se activa el tema; el hijo debe pedir `to_enable: [blockwishlist]`.
+- **Comprobar páginas que dependen de la sesión** (cesta con productos, cuenta): guardar un `storage_state` de Playwright y ejecutar `HANDOFF_STORAGE_STATE=<fichero> steps.py check <paso> --url …`.
+- **Cuidado con las lecturas que se cachean**: tras tocar plantillas, `Tools::clearSmartyCache()`; tras tocar CSS/JS, vaciar `assets/cache` y subir `PS_CCCCSS_VERSION` / `PS_CCCJS_VERSION`.

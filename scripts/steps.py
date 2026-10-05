@@ -22,6 +22,7 @@ expresamente para una página, `group <página> --mode complete` la junta en un 
 Reglas del protocolo: un paso cada vez; no se empieza el siguiente sin `approve`; y `approve`
 solo se ejecuta cuando el maquetador ha revisado en el navegador y ha dado su OK explícito.
 """
+import os
 import argparse
 import json
 import subprocess
@@ -42,6 +43,16 @@ LABELS = {PENDING: "⬜ pendiente", IN_PROGRESS: "🔧 en curso", CHECK_OK: "�
           CHECK_FAIL: "🔴 con fallos", APPROVED: "✅ aprobado", DEFERRED: "⏸ aplazado"}
 VIEWPORTS = (1440, 390)
 
+
+
+def new_check_page(browser, width=1440, height=900):
+    """Página de comprobación. Si existe la variable HANDOFF_STORAGE_STATE (un storage_state de Playwright con la
+    sesión, p. ej. con productos en la cesta o un cliente identificado), se usa para comprobar páginas que dependen
+    de la sesión (cesta, checkout, cuenta)."""
+    state = os.environ.get("HANDOFF_STORAGE_STATE")
+    if state and Path(state).is_file():
+        return browser.new_context(storage_state=state, viewport={"width": width, "height": height}).new_page()
+    return browser.new_page(viewport={"width": width, "height": height})
 
 def load_doc() -> dict:
     if not STEPS_FILE.is_file():
@@ -278,7 +289,7 @@ def check_tokens(url: str) -> list:
     cdn = []
     with sync_playwright() as pw:
         browser = pw.chromium.launch(args=["--no-sandbox"])
-        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page = new_check_page(browser)
         page.on("request", lambda r: cdn.append(r.url) if "fonts.g" in r.url else None)
         page.goto(url, wait_until="networkidle")
         data = page.evaluate(TOKENS_CHECK_JS)
@@ -303,7 +314,7 @@ def check_styles(url: str, assertions: list) -> list:
     rows = []
     with sync_playwright() as pw:
         browser = pw.chromium.launch(args=["--no-sandbox"])
-        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page = new_check_page(browser)
         page.goto(url, wait_until="networkidle")
         page.evaluate("document.fonts.ready")
         for item in assertions:
