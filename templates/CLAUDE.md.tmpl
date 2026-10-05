@@ -24,6 +24,7 @@ Traduce el diseño a Smarty, CSS y JS nativo. **No** portes el código del proto
   - El diseño de origen puede traer estilos en línea. Están inventariados en `design/inline-styles.json`: conviértelos en clases, no los copies.
 - **Textos: todo por el sistema de traducciones de PrestaShop.** Ningún texto visible va escrito a pelo: ni en `.tpl` (`{l s='…' d='Shop.Theme.X'}`), ni en módulos (`$this->trans()`), ni en JS (se pasan por `data-*` o `Media::addJsDef()`). Incluye `placeholder`, `alt`, `title`, `aria-label`, errores y emails. Detalle y lista de textos en `docs/00-reglas-equipo.md` y `docs/05-textos.md`.
 - **Lee `docs/00-reglas-equipo.md`: son las reglas de trabajo del equipo y mandan sobre cualquier otra indicación.**
+- **Los módulos los instala y configura Claude, no el maquetador** (propios o de PrestaShop): con `bin/console prestashop:module install|uninstall|enable` y, para la configuración, con scripts PHP o la propia consola. El maquetador solo revisa el resultado en el navegador y en el Back Office.
 - No se modifica el core de PrestaShop. Respeta los hooks, los overrides de plantilla del tema y la arquitectura de módulos.
 - Separa la presentación (tema) de la funcionalidad (módulos propios) y que el contenido editable se gestione desde el Back Office.
 - Sin dependencias innecesarias: nada de librerías de carrusel ni de UI kits. JS nativo mínimo, diferido y por componente.

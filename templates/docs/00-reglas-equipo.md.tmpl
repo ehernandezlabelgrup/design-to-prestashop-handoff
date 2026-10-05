@@ -25,6 +25,7 @@ Ningún texto visible va escrito a pelo. Incluye el contenido de botones, títul
 Se usa el logo del diseño, que está en `assets/logo/`. No se redibuja ni se escribe como texto. Se sube en el Back Office (Diseño > Tema y logo) y la plantilla lo pinta con los datos de la tienda (`$shop.logo_details`), sin `<img>` fijo en el `.tpl`. Se ajustan las dimensiones en `custom.css`.
 
 ## 3. Arquitectura
+- **Los módulos los instala y configura Claude, no el maquetador** (con `bin/console prestashop:module …` y scripts PHP). El maquetador solo revisa el resultado.
 - No se toca el core. Se usan hooks, overrides de plantilla del tema y módulos.
 - Presentación en el tema, funcionalidad en módulos propios, contenido editable en el Back Office.
 - Sin librerías innecesarias (carruseles, UI kits). JS nativo, diferido y por componente. Sin módulos de terceros para resolver detalles visuales.
