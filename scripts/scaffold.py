@@ -43,7 +43,8 @@ def copy_work_files(work: Path, entry: Path, out: Path):
     if uploads.is_dir():
         shutil.copytree(uploads, source_dir / "uploads", dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns(*IGNORED))
-    for name in ("raw-tokens.json", "structure.json", "texts.json", "asset-map.json", "inline-styles.json"):
+    for name in ("raw-tokens.json", "structure.json", "texts.json", "asset-map.json", "inline-styles.json",
+                 "prestashop-install.json"):
         if (work / name).is_file():
             shutil.copy2(work / name, out / "design" / name)
     if (work / "renders").is_dir():

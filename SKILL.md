@@ -27,6 +27,11 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    python3 scripts/assets.py  --entry <index.html> --out <work>
    ```
    Requiere Python con `playwright` (Chromium) y `Pillow`. Detecta las rutas hash, renderiza cada página en 1440 y 390 px y escribe `raw-tokens.json`, `structure.json`, `texts.json`, `inline-styles.json`, `renders/` y `asset-map.json`. Revisa que no haya `consoleErrors` y mira las capturas.
+   Si quien ejecuta la skill tiene PrestaShop instalado (lo normal), léelo también para fundamentar `docs/04` en datos reales y no en hipótesis:
+   ```
+   python3 scripts/inspect_ps.py --ps-root <ruta-prestashop> --out <work>
+   ```
+   Escribe `prestashop-install.json` (versión, temas con su padre, módulos). El tema activo no se lee (haría falta la BD): confírmalo en el Back Office. Si no hay instalación, `docs/04` queda como hipótesis.
 2. **Montar el paquete**:
    ```
    python3 scripts/scaffold.py --work <work> --entry <index.html> --out <handoff-tienda> --store "<Tienda>" --theme-slug <slug>
