@@ -30,7 +30,8 @@ DIFF_WARN_PCT = 8.0
 
 CHECKS_JS = r"""
 () => {
-  const styled = [...document.querySelectorAll('[style]')].map(e => e.tagName.toLowerCase() + ':' + (e.getAttribute('style') || '').slice(0, 80));
+  // <html> y <body> reciben estilos en línea de scripts del tema base (p. ej. --scroll-padding-top): no son de nuestras plantillas
+  const styled = [...document.querySelectorAll('[style]')].filter(e => e !== document.documentElement && e !== document.body && (e.getAttribute('style') || '').trim() !== '').map(e => e.tagName.toLowerCase() + ':' + (e.getAttribute('style') || '').slice(0, 80));
   const small = [...document.querySelectorAll('a,button,input,select')].filter(e => {
     const r = e.getBoundingClientRect(); return r.width && r.height && (r.width < 44 || r.height < 44); }).length;
   const noDims = [...document.querySelectorAll('img')].filter(i => !i.getAttribute('width') && !i.getAttribute('height')
