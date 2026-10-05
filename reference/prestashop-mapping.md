@@ -32,3 +32,9 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 - El validador de temas (`ThemeValidator`) exige en el `theme.yml` del hijo: `name`, `display_name`, `version`, `author.name`, `meta.compatibility.from`, `meta.available_layouts`, `theme_settings.default_layout` y los tipos base de imagen bajo **`global_settings.image_types`** (no `global:`). Además, `preview.png`.
 - Receta que funciona: copiar el `theme.yml` del padre, poner `parent: <padre>`, cambiar `name`/`display_name`/`version`/`author` y añadir los tipos propios (con `image_fitment: crop|fit|bound`) al final de `global_settings.image_types`.
 - Activarlo: `php bin/console prestashop:theme:enable <tema>` (como el usuario del servidor web). Crea los tipos de imagen en la base de datos. Se revierte activando el tema anterior.
+
+## Problemas conocidos de PrestaShop 9.2 (verificados en 9.2.0)
+- La traducción es-ES de «Subcategories for %s» (`ShopThemeCatalog`) trae un `%` sobrante (`Subcategorías de %s%`) y rompe con 500 todas las páginas de categoría (la plantilla de `ps_categorytree` hace `sprintf`). Se corrige con una traducción personalizada (tabla `translation` o Internacional > Traducciones), sin tocar el core.
+- `bin/console cache:clear` con 512 MB de memoria se queda sin ella: `php -d memory_limit=-1 bin/console cache:clear`.
+- El CMS elimina `<details>` y `<summary>` al guardar.
+- Si el dominio de la tienda no coincide con el de la URL que abres, PrestaShop redirige a la home y pierde la ruta.
