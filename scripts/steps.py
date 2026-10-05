@@ -7,7 +7,9 @@ Comandos (desde la raíz del handoff):
   steps.py start <id>                  empieza un paso (exige los anteriores aprobados)
   steps.py crop <id>                   captura del elemento en el diseño (1440 y 390) para mirarlo
   steps.py check <id> --url <url>      ejecuta la comprobación automática contra PrestaShop
-  steps.py approve <id>                da el paso por bueno (solo tras el OK del maquetador)
+  steps.py approve <id> [--accept "motivo"]  da el paso por bueno (solo tras el OK del maquetador);
+                                       --accept aprueba un paso con ❌ automáticos que el maquetador acepta
+                                       expresamente (queda anotado el motivo)
   steps.py reopen <id>                 vuelve a abrir un paso
   steps.py defer <id> [--reason ...]   aplaza un paso (solo si el maquetador lo pide); no bloquea los siguientes
   steps.py group <grupo> --mode elements|complete   cómo se maqueta una página (ver «Modos»)
@@ -362,10 +364,16 @@ def cmd_approve(args):
     step = find(steps, args.id)
     group = group_of(step)
     ids = [s["id"] for s in members(steps, group)] if group and group_mode(state, group) == "complete" else [step["id"]]
-    if status_of(state, step["id"]) not in (CHECK_OK, IN_PROGRESS):
-        sys.exit(f"«{step['id']}» está en estado {status_of(state, step['id'])}: ejecuta check antes de aprobar")
+    current = status_of(state, step["id"])
+    if current == CHECK_FAIL and args.accept:
+        note = f"aprobado con desviación aceptada: {args.accept}"
+    elif current in (CHECK_OK, IN_PROGRESS):
+        note = args.note or "OK del maquetador"
+    else:
+        sys.exit(f"«{step['id']}» está en estado {current}: ejecuta check antes de aprobar"
+                 + (" (si el maquetador acepta los ❌, usa --accept \"motivo\")" if current == CHECK_FAIL else ""))
     for sid in ids:
-        set_status(state, sid, APPROVED, args.note or "OK del maquetador")
+        set_status(state, sid, APPROVED, note)
     nxt = next((s for s in steps if status_of(load_state(), s["id"]) not in SATISFIED), None)
     what = f"grupo «{group}» ({len(ids)} pasos)" if len(ids) > 1 else f"«{step['title']}»"
     print(f"✅ {what} aprobado." + (f" Siguiente paso: {nxt['id']} · {nxt['title']}." if nxt else " Era el último."))
@@ -454,6 +462,7 @@ def main():
     approve = sub.add_parser("approve")
     approve.add_argument("id")
     approve.add_argument("--note", default="")
+    approve.add_argument("--accept", default="", help="motivo de la desviación que el maquetador acepta")
     approve.set_defaults(func=cmd_approve)
     args = ap.parse_args()
     args.func(args)
