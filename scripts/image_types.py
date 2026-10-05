@@ -105,6 +105,10 @@ def build_types(rows: list) -> list:
 def to_markdown(types: list) -> str:
     lines = ["# Tipos de imagen propuestos (de los usos reales del diseño)", "",
              "Tamaño = ancho máximo en CSS × 2 (retina), limitado al tamaño natural de la imagen origen.", "",
+             "Avisos para quien lo revise: (1) los usos con escritorio y móvil distintos se fusionan al mayor, y en móvil "
+             "la caja a veces es más grande que en escritorio; (2) los tipos de imagen de PrestaShop solo valen para "
+             "imágenes de producto, categoría, fabricante, etc.; las imágenes de módulos o CMS no son tipos; "
+             "(3) el ajuste (`image_fitment`: fit/crop/bound) hay que decidirlo por tipo.", "",
              "| # | Proporción | Tamaño propuesto | Máx. CSS escritorio / móvil | Usos | Contextos principales | Rutas |",
              "|---|---|---|---|---|---|---|"]
     for index, t in enumerate(types, 1):

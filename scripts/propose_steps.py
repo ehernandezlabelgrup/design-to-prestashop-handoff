@@ -65,7 +65,7 @@ def page_steps(routes: list) -> list:
     steps = []
     for route in routes:
         steps.append({"id": f"pagina-{slug(route)}", "title": f"Página · {route}", "kind": "page", "route": route,
-                      "dependsOn": ["header", "footer"], "url": "/",
+                      "dependsOn": ["header", "footer"], "url": "<url-en-PrestaShop>",
                       "summary": f"Maquetar la página «{route}». El modelo la divide en secciones si conviene.",
                       "acceptance": ["Escritorio y móvil como el diseño", "Textos con traducciones", "Sin estilo en línea"]})
     return steps
@@ -77,11 +77,13 @@ def main():
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--demo-data", choices=["yes", "no"], default="no")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--skip-routes", default="", help="rutas que no se maquetan, separadas por coma (p. ej. indice,guia)")
     args = ap.parse_args()
     if args.out.is_file() and not args.force:
         sys.exit(f"{args.out} ya existe (puede tener trabajo del modelo). Usa --force para sobrescribir.")
     structure = json.loads((args.work / "structure.json").read_text())
-    routes = list(structure["routes"])
+    skip = {r for r in args.skip_routes.split(",") if r}
+    routes = [r for r in structure["routes"] if r not in skip]
     steps = prep_steps(args.demo_data == "yes") + global_steps(routes[0]) + page_steps(routes)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"steps": steps}, indent=1, ensure_ascii=False), encoding="utf-8")

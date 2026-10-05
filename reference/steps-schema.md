@@ -18,5 +18,6 @@
 - `url`: ruta de PrestaShop a abrir para comprobarlo (se pasa completa en `check --url`).
 - `dependsOn`: ids que deben estar aprobados. Además, **cada paso exige todos los anteriores aprobados**.
 - `confirm: true`: lo pone el esqueleto en pasos inciertos (p. ej. pre-header). El modelo lo confirma (quita la marca) o borra el paso.
-- Los pasos de sección ponen delante el de su página y heredan `route`.
+- Un paso de sección va **después** de los de las secciones anteriores de su misma página y hereda su `route`; la página entera se comprueba con un paso `page` al final (o se omite si las secciones la cubren).
+- `propose_steps.py --skip-routes indice,guia` excluye rutas que no se maquetan. Los `url` del esqueleto son un marcador `<url-en-PrestaShop>`: hay que sustituirlos.
 - Los criterios (`acceptance`) deben ser comprobables por una persona mirando el navegador.
