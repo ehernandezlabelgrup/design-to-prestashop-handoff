@@ -5,7 +5,7 @@ description: Convierte uno o varios HTML de diseño (maqueta estática, SPA con 
 
 # design-to-prestashop-handoff
 
-Entrada: uno o más HTML de diseño (+ su carpeta de imágenes). Salida: una carpeta `handoff-<tienda>/` (y su zip) que el equipo PrestaShop copia a su instalación y arranca con el `PROMPT-INICIAL.md`.
+Entrada: uno o más HTML de diseño (+ su carpeta de imágenes). Salida: una carpeta `handoff-<tienda>/` (sin zip) que el equipo PrestaShop copia a su instalación y arranca con el `PROMPT-INICIAL.md`.
 
 ## Reglas que el handoff siempre impone
 Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
@@ -47,7 +47,7 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    - `CLAUDE.md`: `SOURCE_PRIORITY` (vista de escritorio > móvil > estados > docs), `HOW_TO_READ_SOURCE` (según el formato del HTML), `PROJECT_DESCRIPTION` y `DEMO_CONTENT_NOTE`.
    - Estilos en línea del diseño (`inline-styles.json`): no se copian; se describen como clases en `docs/02`.
 4. **Validar**: `python3 scripts/validate.py <handoff-tienda>`. Corrige hasta que diga OK.
-5. **Entregar**: resumen breve al usuario y, tras su visto bueno, zip sin `.DS_Store`.
+5. **Entregar**: el handoff queda como **carpeta** (sin zip) dentro del proyecto donde el equipo va a maquetar. Resumen breve al usuario y su visto bueno. Si la carpeta se copia entre equipos, que no lleve `.DS_Store`.
 
 ## Después del handoff: validación página a página
 El equipo maqueta y valida una página cada vez. El handoff trae `docs/06-validacion-por-pagina.md` y `validation/progreso.md` (una fila por ruta). Para cada página maquetada:
