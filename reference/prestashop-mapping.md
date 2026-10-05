@@ -74,3 +74,8 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 - Precio sin decimales cuando son `,00`: `{$product.price|regex_replace:'/[.,]00(?=\D*$)/':''}` (el separador es un espacio duro).
 - **Tarjeta toda clicable con un corazón dentro**: enlace del título con `::after { position:absolute; inset:0; z-index:1 }`, y la caja de imagen con `z-index:2` y su propio enlace (`tabindex="-1" aria-hidden="true"`). Si la caja no tiene `z-index` y se le aplica `transform` en hover, el `::after` queda por encima del corazón y un clic en él abre la ficha.
 - Con `:focus-visible` en el enlace estirado, el anillo se dibuja en el `::after` para que rodee toda la tarjeta.
+
+## Datos que la plantilla no tiene: plugin de Smarty en el tema (PS 9.2)
+- El tema puede traer sus propios plugins de Smarty en `themes/<tema>/plugins/function.<nombre>.php` (el core añade esa carpeta; el tema hijo también). Sirven para lo que la plantilla no recibe, p. ej. el total de productos de una categoría para un «Ver todo (16)»: `{jc_shop_link assign='jcShop'}` → `$jcShop.url` y `$jcShop.total` (con `Category::getProducts(..., $getTotal = true)`).
+- `ps_newproducts` enseña los **productos más nuevos por fecha de alta** (ventana `PS_NB_DAYS_NEW_PRODUCT`, 20 días): es lo coherente con la etiqueta «Nuevo». Si el diseño enseña otros productos (por ejemplo, los 4 primeros del catálogo), hay que decidir con el cliente si el bloque es «Novedades» real o una selección fija (`ps_featuredproducts` con categoría Home).
+- Rejilla de tarjetas del diseño: `repeat(auto-fill, minmax(min(100%, 240px), 1fr))` con `gap: clamp(16px, 2vw, 28px)`; a 1440 px caben 5 columnas y 4 tarjetas ocupan 4 de ellas.
