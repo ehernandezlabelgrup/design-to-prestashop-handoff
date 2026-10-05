@@ -304,9 +304,16 @@ def check_styles(url: str, assertions: list) -> list:
                 rows.append((item["name"], False, f"no existe «{item['selector']}»"))
                 continue
             state = item.get("state")
+            # centrar el elemento: con un header sticky, el scroll por defecto lo deja tapado y el hover falla
+            target.evaluate("el => el.scrollIntoView({ block: 'center', behavior: 'instant' })")
+            page.wait_for_timeout(300)   # por si la página tiene scroll suave
             if state == "hover":
-                target.hover()
-                page.wait_for_timeout(250)
+                # ratón real sobre el centro: .hover() falla si un enlace estirado (::after) cubre el elemento
+                box = target.bounding_box()
+                cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+                page.mouse.move(cx - 8, cy - 8)   # dos movimientos: así el navegador dispara el hover de forma fiable
+                page.mouse.move(cx, cy)
+                page.wait_for_timeout(600)
             elif state == "focus":
                 target.focus()
                 page.keyboard.press("Shift+Tab")

@@ -68,3 +68,9 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 - **Estado del slider sin `element.style`**: la pista usa `data-slide="N"` y reglas `[data-slide="N"] { transform: translateX(-N00%) }` en custom.css; el JS solo cambia el atributo, `aria-hidden`/`inert` de los slides no visibles y la clase `is-active` de los puntos.
 - **Autoplay accesible**: se pausa con el ratón encima y con la pestaña oculta, y no arranca con `prefers-reduced-motion: reduce` (en ese modo el CSS global de tokens pone `--dur-slide` casi a 0).
 - Un título largo editado en el Back Office puede salirse de su columna: `overflow-wrap: break-word` en el título del slide lo evita.
+
+## Tarjeta de producto en PrestaShop 9.2 (verificado)
+- `catalog/_partials/miniatures/product.tpl` es el único parcial de la tarjeta (home, listado, relacionados…). En él están disponibles `$product.features` (para sacar el color de fondo de una característica «Fondo» → clase `.jc-bg--<valor>`), `$product.flags` (`new`, `out_of_stock`), `$product.cover.bySize.<tipo>.url` (para `srcset` con tipos de imagen propios), `$product.category_name` y `$product.description_short`.
+- Precio sin decimales cuando son `,00`: `{$product.price|regex_replace:'/[.,]00(?=\D*$)/':''}` (el separador es un espacio duro).
+- **Tarjeta toda clicable con un corazón dentro**: enlace del título con `::after { position:absolute; inset:0; z-index:1 }`, y la caja de imagen con `z-index:2` y su propio enlace (`tabindex="-1" aria-hidden="true"`). Si la caja no tiene `z-index` y se le aplica `transform` en hover, el `::after` queda por encima del corazón y un clic en él abre la ficha.
+- Con `:focus-visible` en el enlace estirado, el anillo se dibuja en el `::after` para que rodee toda la tarjeta.
