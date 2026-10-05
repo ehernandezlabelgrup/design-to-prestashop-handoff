@@ -16,6 +16,8 @@ Traduce el diseño a Smarty, CSS y JS nativo. **No** portes el código del proto
 
 ## Reglas de implementación (innegociables)
 
+- **Nunca se modifica el código de un módulo de terceros (nativo de PrestaShop o de otro autor).** Todo cambio va como override en el tema hijo (`themes/<tema>/modules/<módulo>/…`), con plugins de Smarty del tema, con hooks, con CSS/JS del tema o con la configuración del propio módulo en el Back Office. Solo se edita el código de los módulos que se crean para el proyecto (`jc_*`).
+
 - **CSS: todo en `custom.css`.** Cada regla de estilo va en `themes/{{THEME_SLUG}}/assets/css/custom.css`, con los tokens en `:root` al principio (parte de `tokens.css`).
   - **Prohibido el estilo en línea**: ni atributos `style="…"` en plantillas `.tpl` ni en JS, ni bloques `<style>` en las plantillas.
   - Los valores que cambian por elemento (color de una familia, proporción de una imagen, estado) se expresan con clases modificadoras (`.card--agotado`) o atributos `data-*` con su regla en `custom.css`.
