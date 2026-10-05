@@ -18,7 +18,8 @@ Este handoff incluye datos demo sacados del diseño: `design/demo-data.json`. Si
 ## Cómo cargarlo
 <!-- MODEL: propuesta concreta tras inspeccionar la instalación. Opciones habituales:
      1. Importador CSV del Back Office (Parámetros avanzados > Importar) con design/demo-csv/categories.csv y products.csv, generados con scripts/demo_data_csv.py (las imágenes se descargan por URL: hay que servir design/source/uploads/).
-     2. Webservice de PrestaShop o un script que use las clases del core, si el CSV se queda corto (combinaciones, clientes, pedidos).
+     2. Script PHP de la skill con las clases del core (`scripts/ps_seed_demo.php`, copiado a `tools/` del handoff): carga categorías y productos con imágenes, miniaturas, características y combinaciones sin iniciar sesión en el Back Office; se ejecuta como el usuario del servidor web y es idempotente. Es la vía que mejor funcionó en la práctica.
+     3. Webservice de PrestaShop o un script que use las clases del core, si el CSV se queda corto (combinaciones, clientes, pedidos).
      Elige una, justifícala y describe cómo verificar el resultado. Es una hipótesis a validar. -->
 
 ## Cómo borrarlo

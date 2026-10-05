@@ -72,7 +72,7 @@ def copy_work_files(work: Path, entry: Path, out: Path):
 def install_tools(out: Path):
     tools = out / "tools"
     tools.mkdir(exist_ok=True)
-    for name in ("steps.py", "compare.py"):
+    for name in ("steps.py", "compare.py", "ps_seed_demo.php"):
         shutil.copy2(SKILL_ROOT / "scripts" / name, tools / name)
 
 
