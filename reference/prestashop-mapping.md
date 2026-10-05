@@ -135,3 +135,6 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 - **Variantes como botones**: todos los tipos de grupo (select, radio, color) se pintan como radios con `data-product-attribute`; el formulario envía lo mismo y el núcleo refresca precio, stock y URL (`/4-3-wo.html#/2-idioma-espanol`).
 - **Textos comunes editables una vez** (acordeones «Envío y devoluciones», «Autenticidad»): páginas CMS sin indexar y un plugin que las lee por su URL amigable.
 - **Importes sin «,00»** como el diseño: `regex_replace:'/[.,]00(?=\D*$)/':''` en tarjeta, ficha y cesta.
+- **Toast sin fondo oscuro**: además del CSS, el modal del toast lleva `data-bs-backdrop="false"` (Bootstrap lo lee de los atributos y el JS de Hummingbird solo pasa `focus` y `keyboard`). Al probar, contar solo los `.modal-backdrop.show`: PrestaShop deja otros `.modal-backdrop` invisibles (sin `show`) en la página.
+- **Galería sin miniaturas**: el cuadrado de color debe crecer (`flex: 1`) para llenar la columna; si no, queda un hueco bajo la foto cuando la columna de compra es más alta.
+- **Latencia del refresco AJAX en servidores lentos**: el JS del núcleo cancela el refresco anterior al lanzar otro; en un servidor de pruebas lento el importe del botón puede tardar unos segundos en corregirse tras añadir.
