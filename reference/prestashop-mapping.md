@@ -172,3 +172,11 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 
 - `ProductController` añade el aviso «Tu carrito contiene %1s de este producto» (notificación `info`) cada vez que la ficha se recarga con el producto en la cesta; sale por `_partials/notifications.tpl`. Un override de esa plantilla da estilo a los cuatro tipos (info, aviso, éxito, error) de toda la tienda.
 - **Las compras de prueba consumen stock real**: tras pasar `e2e_checkout.py` repón el stock de los productos usados (`StockAvailable::setQuantity`) o la ficha saldrá «Agotado» al siguiente que la revise.
+
+## «Avísame» en la ficha agotada (ps_emailalerts)
+
+- Es nativo: el módulo pinta en el gancho `displayProductAdditionalInfo` un bloque con email (solo invitados; los clientes con sesión no lo piden) y el botón «Notify me when available». Si la plantilla de ficha del tema no pinta ese gancho, **no se ve** y nadie lo nota: incluirlo en `product-additional-info.tpl`.
+- Pintar el gancho **entero** trae también los demás módulos de ese gancho (botones de compartir…): limitarlo con `{hook h='displayProductAdditionalInfo' mod='ps_emailalerts' product=$product}`.
+- Override del tema de `modules/ps_emailalerts/views/templates/hook/product.tpl`: el JS del módulo busca `.js-mailalert`, sus **hijos directos** `input[type=email]` y `.js-mailalert-add`, `.gdpr_consent_wrapper` y `.js-mailalert-alerts` (donde inyecta un `<article class="alert alert-success|danger">`): conservar esa estructura y estilar `.alert` dentro de `.js-mailalert-alerts`.
+- Requisitos: `MA_CUSTOMER_QTY=1`, gestión de stock activa y producto sin pedidos con stock agotado permitidos.
+- El diseño casi nunca trae este bloque: se añade al paso `estados-nativos` (producto agotado: avisos de reposición) y se anota en `validation/decisiones.md`.

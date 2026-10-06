@@ -104,7 +104,7 @@ def native_states_step() -> dict:
     return {"id": "estados-nativos", "title": "Estados y avisos nativos que el diseño no trae", "kind": "final", "route": "inicio", "dependsOn": [], "url": "/",
             "summary": "SOLO cuando el resto de páginas está maquetado. Los diseños casi nunca incluyen los avisos y estados que PrestaShop genera solo "
                        "(p. ej. «Tu carrito contiene 1 de este producto» al recargarse la ficha tras añadir a la cesta, producto añadido, cantidad mínima, "
-                       "stock bajo, errores de formulario, sesión caducada, código de descuento aplicado, 404, mantenimiento). El maquetador los provoca "
+                       "stock bajo, el «Avísame» (ps_emailalerts) de la ficha agotada, errores de formulario, sesión caducada, código de descuento aplicado, 404, mantenimiento). El maquetador los provoca "
                        "uno a uno en el navegador, comprueba que ninguno sale con el azul/verde/rojo por defecto de Bootstrap y los adapta al diseño "
                        "(notifications.tpl y CSS), usando los mismos tokens que las cajas del diseño. Cualquier estado sin referencia se anota en "
                        "validation/decisiones.md para que el diseñador lo confirme.",
