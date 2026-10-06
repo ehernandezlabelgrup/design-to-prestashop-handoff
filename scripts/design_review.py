@@ -77,6 +77,19 @@ def footer_titles(html: str) -> list:
     return titles
 
 
+def header_links(html: str) -> list:
+    """Enlaces del header (texto o aria-label), en orden: el header debe ser igual en todas las páginas."""
+    match = re.search(r"<header\b.*?</header>", html, re.S)
+    if not match:
+        return []
+    out = []
+    for attrs, inner in re.findall(r"<a\b([^>]*)>(.*?)</a>", match.group(0), re.S):
+        label = re.search(r'aria-label="([^"]+)"', attrs)
+        text = re.sub(r"<[^>]+>|\s+", " ", inner).strip()
+        out.append((text or (label.group(1) if label else "")).strip())
+    return out
+
+
 def audit_404(base: str) -> tuple:
     url = base.rstrip("/") + "/esta-pagina-no-existe-revision"
     try:
@@ -124,8 +137,14 @@ def main():
     public = [live_url(st, args.url) for st in steps if st["kind"] == "page" and st.get("route") and st.get("url")
               and not matches(st["route"], E2E_ROUTES + TOKEN_ROUTES + SESSION_ROUTES)]
     reference = footer_titles(fetch_text(args.url.rstrip("/") + "/"))
-    odd = [u for u in public if footer_titles(fetch_text(u)) != reference]
-    rows.append(("Pie de página", "todas las públicas", "❌" if odd else "✅",
+    pages = {u: fetch_text(u) for u in public}
+    odd = [u for u, html in pages.items() if footer_titles(html) != reference]
+    head_ref = header_links(fetch_text(args.url.rstrip("/") + "/"))
+    odd_head = [u for u, html in pages.items() if header_links(html) != head_ref]
+    rows.append(("Pie de página", "header de todas las públicas", "❌" if odd_head else "✅",
+                 ("el header difiere del de la home en: " + ", ".join(odd_head)) if odd_head else f"mismos enlaces: {', '.join(x for x in head_ref if x)}"))
+    worst = max(worst, 1 if odd_head else 0)
+    rows.append(("Pie de página", "footer de todas las públicas", "❌" if odd else "✅",
                  ("el pie difiere del de la home (columnas en otro orden o distintas) en: " + ", ".join(odd)) if odd else f"mismas columnas: {', '.join(reference)}"))
     worst = max(worst, 1 if odd else 0)
     url404, problems = audit_404(args.url)

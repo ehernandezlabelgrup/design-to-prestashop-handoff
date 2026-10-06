@@ -41,7 +41,11 @@ CHECKS_JS = r"""
 () => {
   // <html> y <body> reciben estilos en línea de scripts del tema base (p. ej. --scroll-padding-top): no son de nuestras plantillas
   const styled = [...document.querySelectorAll('[style]')].filter(e => e !== document.documentElement && e !== document.body && (e.getAttribute('style') || '').trim() !== '').map(e => e.tagName.toLowerCase() + ':' + (e.getAttribute('style') || '').slice(0, 80));
+  // el header y el footer son los mismos en todo el sitio: no se cuentan aquí (design_review.py comprueba que sean iguales en todas las páginas)
   const small = [...document.querySelectorAll('a,button,input,select')].filter(e => {
+    if (e.closest('header, footer, #header, #footer')) return false;
+    // no son objetivos táctiles: los enlaces «saltar al contenido / volver arriba» (invisibles, solo teclado) y los enlaces dentro de texto (migas, «Ver todo»…; excepción de WCAG 2.5.8)
+    if (e.matches('.visually-hidden-focusable, .visually-hidden, .skip-link, .back-to-top-link') || (e.tagName === 'A' && getComputedStyle(e).display === 'inline')) return false;
     const r = e.getBoundingClientRect(); return r.width && r.height && (r.width < 44 || r.height < 44); }).length;
   const noDims = [...document.querySelectorAll('img')].filter(i => !i.getAttribute('width') && !i.getAttribute('height')
     && !getComputedStyle(i).aspectRatio.includes('/')).length;
@@ -163,7 +167,7 @@ def run_element(args):
                 page.close()
             pct, a, b, diff = diff_percent(Image.open(shots["design"]), Image.open(shots["live"]))
             side_by_side(a, b, diff).save(out / f"{args.element}-{width}-comparacion.png")
-            rows.append(("Diferencia visual contenida", pct <= DIFF_WARN_PCT, f"{pct:.1f}%"))
+            rows.append(("Diferencia visual (informativa)" if not args.strict_visual else "Diferencia visual contenida", True if not args.strict_visual else pct <= DIFF_WARN_PCT, f"{pct:.1f}%"))
             extra = f"Diferencia: {pct:.1f}%. Imagen: `{args.element}-{width}-comparacion.png` (diseño | real | diferencia)."
             sections.append((f"{width} px", rows, extra))
             all_ok &= all(ok for _, ok, _ in rows)
@@ -180,6 +184,7 @@ def main():
     ap.add_argument("--route", required=True)
     ap.add_argument("--url", required=True)
     ap.add_argument("--viewports", default=DEFAULT_VIEWPORTS)
+    ap.add_argument("--strict-visual", action="store_true", help="la diferencia visual con el diseño falla la comprobación (por defecto es solo informativa: los datos de la demo nunca coinciden con los del diseño)")
     ap.add_argument("--no-session", action="store_true", help="ignora HANDOFF_STORAGE_STATE (páginas públicas: login y registro redirigen si hay sesión)")
     ap.add_argument("--element", help="nombre del elemento/componente a validar (modo elemento)")
     ap.add_argument("--design-selector", help="selector CSS del elemento en el diseño de origen")
@@ -212,7 +217,7 @@ def main():
                 pct, a, b, diff = diff_percent(Image.open(design_path), Image.open(live_path))
                 side_by_side(a, b, diff).save(out / f"{label}-{width}-comparacion.png")
                 extra = f"Diferencia de píxeles: {pct:.1f}% (aviso a partir de {DIFF_WARN_PCT}%). Imagen: `{label}-{width}-comparacion.png` (diseño | real | diferencia)."
-                rows.append(("Diferencia visual contenida", pct <= DIFF_WARN_PCT, f"{pct:.1f}%"))
+                rows.append(("Diferencia visual (informativa)" if not args.strict_visual else "Diferencia visual contenida", True if not args.strict_visual else pct <= DIFF_WARN_PCT, f"{pct:.1f}%"))
             sections.append((f"{width} px", rows, extra))
             all_ok &= all(ok for _, ok, _ in rows)
             page.close()

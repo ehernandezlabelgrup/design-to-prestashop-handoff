@@ -96,7 +96,8 @@ function seedProduct(array $d, array $cat, array $ctx): ?string
     $p->id_category_default = $cat[$d['defaultCategory']]; $p->active = 1; $p->visibility = 'both'; $p->condition = 'new';
     $p->available_for_order = 1; $p->show_price = 1; $p->indexed = 1; $p->redirect_type = '404';
     // «Nuevo» lo decide la fecha de alta: hoy para los marcados, una fecha antigua para el resto.
-    $p->date_add = !empty($d['isNew']) ? date('Y-m-d H:i:s') : ($d['createdAt'] ?? '2020-01-01') . ' 00:00:00';
+    $p->date_add = !empty($d['isNew']) ? date('Y-m-d H:i:s', time() - 60 * (int) ($ctx['position'] ?? 0)) : ($d['createdAt'] ?? '2020-01-01') . ' 00:00:00';
+    if (empty($d['isNew']) && isset($ctx['position'])) { $p->date_add = date('Y-m-d H:i:s', strtotime($p->date_add) - (int) $ctx['position']); }  // desempata los antiguos con la misma fecha, en el orden del JSON
     $p->date_upd = $p->date_add;
     $p->add(false);
     $p->updateCategories(array_values(array_map(fn($s) => $cat[$s], $d['categories'])));
@@ -126,7 +127,9 @@ function seedProduct(array $d, array $cat, array $ctx): ?string
 $categoryIds = seedCategories($data, $defaultLang, $byLang, $db);
 echo count($categoryIds) . " categorías listas\n";
 $context = ['lang' => $defaultLang, 'byLang' => $byLang, 'db' => $db, 'tax' => $taxGroup, 'vat' => $vat, 'images' => $imagesDir];
-foreach ($data['products'] as $product) {
+foreach ($data['products'] as $position => $product) {
+    // el primero del JSON es el más reciente (orden «Más recientes» del diseño): sin esto todos los «nuevos» comparten fecha y el orden sale al azar
+    $context['position'] = $position;
     $line = seedProduct($product, $categoryIds, $context);
     echo $line ?? "ya existe {$product['reference']}", "\n";
 }

@@ -192,3 +192,10 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 - Es configuración, no código: país con `contains_states=1` (la provincia pasa a ser obligatoria), `State:name` en el formato de dirección del país y provincias activas. `scripts/ps_setup_address.php` lo hace de forma idempotente.
 - **Zona de la provincia**: `Address::getZoneById` da prioridad a la zona de la provincia sobre la del país; si las provincias están en otra zona, los transportistas de la zona del país no salen. El script las pasa a la zona del país.
 - El campo País debe venir antes que Provincia en el formulario; la provincia aparece al elegir país porque el formulario se recarga por país.
+
+## Qué cuenta la revisión de diseño
+
+- **Elementos pequeños (< 44 px)**: no se cuentan el header y el footer (son iguales en todo el sitio; `design_review.py` comprueba que lo sean), los enlaces «saltar al contenido / volver arriba» (invisibles, solo teclado) ni los enlaces dentro de texto (migas, «Ver todo»; excepción de WCAG 2.5.8). Sí cuentan los controles (botones, chips, casillas, puntos del slider): si el diseño los dibuja pequeños se acepta por escrito en `validation/decisiones.md`.
+- **Diferencia visual con el diseño**: informativa, no falla (los datos de la demo nunca coinciden con los del prototipo). `compare.py --strict-visual` la vuelve a exigir.
+- **Páginas públicas sin sesión**: login y registro redirigen a Mi cuenta si hay sesión. Cesta, pago y confirmación los cubre `e2e_checkout.py`; «nueva contraseña» se revisa a mano.
+- **Orden del listado**: el diseño ordena «Más recientes» por el orden de los datos con los «nuevos» intercalados; con fechas de alta no se puede reproducir a la vez el orden y la etiqueta «Nuevo». `ps_seed_demo.php` da fechas descendentes en el orden del JSON (el primero, el más reciente).
