@@ -25,11 +25,11 @@ from pathlib import Path
 from PIL import Image, ImageChops
 from playwright.sync_api import sync_playwright
 
-def new_page(browser, width, height, live=True):
+def new_page(browser, width, height, live=True, session=True):
     """Página de comprobación. La del sitio en vivo usa HANDOFF_STORAGE_STATE si existe (sesión con cesta o cliente identificado,
     para páginas de cesta, pago y cuenta); la del diseño estático, nunca."""
     state = os.environ.get("HANDOFF_STORAGE_STATE")
-    if live and state and Path(state).is_file():
+    if live and session and state and Path(state).is_file():
         return browser.new_context(storage_state=state, viewport={"width": width, "height": height}).new_page()
     return browser.new_page(viewport={"width": width, "height": height})
 
@@ -149,7 +149,7 @@ def run_element(args):
             width, height = (int(x) for x in vw.split("x"))
             shots = {}
             for side, url, selector in (("design", design_url, args.design_selector), ("live", args.url, args.live_selector)):
-                page = new_page(browser, width, height, live=(side == "live"))
+                page = new_page(browser, width, height, live=(side == "live"), session=not args.no_session)
                 page.goto(url, wait_until="load")
                 page.wait_for_timeout(SETTLE_MS)
                 target = page.locator(selector).first
@@ -180,6 +180,7 @@ def main():
     ap.add_argument("--route", required=True)
     ap.add_argument("--url", required=True)
     ap.add_argument("--viewports", default=DEFAULT_VIEWPORTS)
+    ap.add_argument("--no-session", action="store_true", help="ignora HANDOFF_STORAGE_STATE (páginas públicas: login y registro redirigen si hay sesión)")
     ap.add_argument("--element", help="nombre del elemento/componente a validar (modo elemento)")
     ap.add_argument("--design-selector", help="selector CSS del elemento en el diseño de origen")
     ap.add_argument("--live-selector", help="selector CSS del elemento en PrestaShop")
@@ -197,7 +198,7 @@ def main():
         browser = pw.chromium.launch(args=["--no-sandbox"])
         for vw in args.viewports.split(","):
             width, height = (int(x) for x in vw.split("x"))
-            page = new_page(browser, width, height)
+            page = new_page(browser, width, height, session=not args.no_session)
             errors = []
             page.on("pageerror", lambda e: errors.append(str(e)[:150]))
             page.goto(args.url, wait_until="load")

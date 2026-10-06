@@ -265,6 +265,8 @@ def run_compare(step: dict, url: str) -> int:
                 "--live-selector", step["liveSelector"]]
     else:
         cmd += ["--route", step["route"]]
+    if step.get("session") is False:   # página pública que con sesión iniciada redirige (login, registro…)
+        cmd.append("--no-session")
     return subprocess.run(cmd).returncode
 
 

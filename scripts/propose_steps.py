@@ -29,6 +29,15 @@ def prep_steps(with_demo: bool) -> list:
          "docs": ["docs/00-reglas-equipo.md"],
          "acceptance": ["Existe design/inventario-inicial.json con los módulos, transportistas, zonas y configuración de partida",
                         "Existe validation/cambios-tienda.md (aunque esté vacío) para ir anotando los cambios"]},
+        {"id": "prep-direcciones", "title": "Provincia como campo de la dirección", "kind": "prep", "dependsOn": [],
+         "summary": "Primera configuración de la tienda: la PROVINCIA es un campo más (obligatorio) de la dirección. sudo -u www-data php scripts/ps_setup_address.php "
+                    "--ps-root=… --countries=ES[,PT…] [--no-identification] activa «Contiene provincias» en cada país, añade State:name al formato de dirección y pasa las "
+                    "provincias a la zona del país (PrestaShop da prioridad a la zona de la provincia: si difiere, no salen transportistas). Si el país no tiene provincias "
+                    "cargadas se importan en International > Ubicaciones. Ciudad y código postal también son obligatorios; nada más.",
+         "docs": ["docs/04-plan-prestashop.md"],
+         "acceptance": ["En el formulario de dirección y en el pago, «Provincia» sale obligatoria para cada país de venta",
+                        "Un pedido a una provincia concreta muestra transportistas (la provincia está en la zona del país)",
+                        "La dirección formateada (pedido, email) incluye la provincia"]},
         {"id": "prep-imagenes", "title": "Tipos de imagen", "kind": "prep", "dependsOn": [],
          "summary": "Crear los tipos de imagen de PrestaShop según docs/07-ajustes-imagenes.md.",
          "docs": ["docs/07-ajustes-imagenes.md"],

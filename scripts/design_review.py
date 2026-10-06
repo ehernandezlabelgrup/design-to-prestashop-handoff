@@ -20,10 +20,16 @@ from urllib.parse import quote, urljoin, urlparse
 from urllib.request import urlopen
 
 HERE = Path(__file__).resolve().parent
-GROUPS = [("Home", ("inicio",)), ("Listado", ("tienda",)), ("Ficha", ("producto",)), ("Búsqueda", ("buscar", "busqueda")),
-          ("Acceso", ("login", "registro", "recuperar")), ("Compra", ("carrito", "checkout", "confirmacion")), ("Cuenta", ("cuenta",)),
+GROUPS = [("Cuenta", ("cuenta", "tienda/fav")), ("Home", ("inicio",)), ("Listado", ("tienda",)), ("Ficha", ("producto",)), ("Búsqueda", ("buscar", "busqueda")),
+          ("Acceso", ("login", "registro", "recuperar")), ("Compra", ("carrito", "checkout", "confirmacion")),
           ("Estáticas", ("sobre", "envios", "faq", "contacto", "politicas", "legal", "terms", "privacidad", "cookies"))]
-SESSION_ROUTES = ("carrito", "checkout", "confirmacion", "cuenta", "tienda/fav", "recuperar/nueva")
+E2E_ROUTES = ("carrito", "checkout", "confirmacion")      # dependen de lo que haya en la cesta: ya las cubre e2e_checkout.py
+TOKEN_ROUTES = ("recuperar/nueva",)                        # necesitan un enlace de recuperación válido: se revisan a mano
+SESSION_ROUTES = ("cuenta", "tienda/fav")                  # las únicas que necesitan sesión iniciada (HANDOFF_STORAGE_STATE)
+
+
+def matches(route: str, prefixes: tuple) -> bool:
+    return any(route == r or route.startswith(r + "/") for r in prefixes)
 
 
 def group_of(route: str) -> str:
@@ -39,9 +45,10 @@ def live_url(step: dict, base: str) -> str:
     return base.rstrip("/") + (path or "/")
 
 
-def run_page(handoff: Path, route: str, url: str) -> tuple:
-    code = subprocess.run([sys.executable, str(HERE / "compare.py"), "--handoff", str(handoff), "--route", route, "--url", url],
-                          capture_output=True, text=True).returncode
+def run_page(handoff: Path, route: str, url: str, session: bool = False) -> tuple:
+    """session=False: la página pública se revisa SIN la sesión guardada (login y registro redirigen a Mi cuenta si hay sesión)."""
+    cmd = [sys.executable, str(HERE / "compare.py"), "--handoff", str(handoff), "--route", route, "--url", url] + ([] if session else ["--no-session"])
+    code = subprocess.run(cmd, capture_output=True, text=True).returncode
     report = handoff / "validation" / f"{route.replace('/', '_')}-informe.md"
     fails = []
     if report.is_file():
@@ -101,14 +108,21 @@ def main():
         route = step.get("route") or ""
         if step["kind"] != "page" or not route or not step.get("url"):
             continue
-        if any(route == r or route.startswith(r) for r in SESSION_ROUTES) and not has_session:
-            rows.append((group_of(route), route, "⏭️", "depende de sesión (HANDOFF_STORAGE_STATE); lo cubre la prueba de compras"))
+        if matches(route, E2E_ROUTES):
+            rows.append((group_of(route), route, "⏭️", "depende de la cesta: la cubre la prueba de compras (e2e_checkout.py)"))
             continue
-        code, fails = run_page(args.handoff, route, live_url(step, args.url))
+        if matches(route, TOKEN_ROUTES):
+            rows.append((group_of(route), route, "⏭️", "necesita un enlace de recuperación válido: revisar a mano"))
+            continue
+        needs_session = matches(route, SESSION_ROUTES)
+        if needs_session and not has_session:
+            rows.append((group_of(route), route, "⏭️", "necesita sesión iniciada (HANDOFF_STORAGE_STATE)"))
+            continue
+        code, fails = run_page(args.handoff, route, live_url(step, args.url), session=needs_session)
         rows.append((group_of(route), route, "✅" if code == 0 else "❌", "; ".join(fails) if fails else ("" if code == 0 else "ver validation/")))
         worst = max(worst, 0 if code == 0 else 1)
     public = [live_url(st, args.url) for st in steps if st["kind"] == "page" and st.get("route") and st.get("url")
-              and not any(st["route"] == r or st["route"].startswith(r) for r in SESSION_ROUTES)]
+              and not matches(st["route"], E2E_ROUTES + TOKEN_ROUTES + SESSION_ROUTES)]
     reference = footer_titles(fetch_text(args.url.rstrip("/") + "/"))
     odd = [u for u in public if footer_titles(fetch_text(u)) != reference]
     rows.append(("Pie de página", "todas las públicas", "❌" if odd else "✅",

@@ -87,6 +87,10 @@ Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automá
 
 El último paso (`prueba-final`) hace dos cosas, y las dos al final de todo: 1) las tres compras con navegador real (`scripts/e2e_checkout.py`) y 2) `scripts/design_review.py`, que repasa si **siguen el diseño** las páginas estáticas (sobre, envíos, FAQ, contacto, políticas), la home, el listado, la ficha, la búsqueda, el acceso y la 404, y escribe `validation/revision-diseno.md`. `steps.py check prueba-final` lanza ambas; las páginas de sesión (cesta, pago, cuenta) usan `HANDOFF_STORAGE_STATE`. Si el diseño no trae 404, se audita lo mínimo (custom.css, un H1, sin estilos en línea ni Bootstrap por defecto) y se avisa para que lo confirme quien diseñó.
 
+## Configuración inicial: la provincia en las direcciones
+
+Antes de maquetar formularios o el pago, paso `prep-direcciones`: la **provincia** es un campo más y obligatorio de la dirección (`scripts/ps_setup_address.php`: «Contiene provincias» por país, `State:name` en el formato de dirección y provincias en la zona del país). Sin eso el pago no pide provincia y, si la provincia queda en otra zona, no salen transportistas. Ciudad y código postal también obligatorios; nada más.
+
 ## README de entrega (último paso)
 
 El plan termina con `readme-entrega`: `scripts/make_readme.py` genera `README-ENTREGA.md` para que cualquiera que coja el proyecto sepa qué se hizo: **módulos propios creados** (con sus ficheros), módulos de terceros (activos y, con inventario inicial, cuáles se instalaron o activaron), **overrides del tema** (plantillas, módulos sobrescritos, plugins de Smarty, CSS/JS), configuración cambiada, transportistas, zonas, estados, CMS, catálogo, traducciones, pasos aplazados, decisiones por confirmar y la última revisión de diseño.

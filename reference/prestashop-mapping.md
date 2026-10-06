@@ -186,3 +186,9 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 - **Cursor de texto en las capturas**: Playwright oculta el cursor por defecto (`caret="hide"`). **No** usar `caret="initial"`: deja el cursor parpadeando y las capturas dejan de ser estables (comprobado: 12 capturas con el valor por defecto dan 1 imagen; con `initial`, 2). Si aun así aparece, quitar el foco antes de capturar (`document.activeElement.blur()`).
 - **Favicon**: la URL del favicon se versiona con `PS_IMG_UPDATE_TIME` (`FrontController::getTemplateVarShop`), no con `PS_FAVICON_UPDATE_TIME`: `ps_set_favicon.php` actualiza los dos o el navegador sigue con el antiguo.
 - **Validador de colores**: `validate.py` acepta los hex de `raw-tokens.json` y también los que aparecen en `design/source/**/*.html` (hover, error y éxito no salen en las capturas).
+
+## Provincia como campo de la dirección
+
+- Es configuración, no código: país con `contains_states=1` (la provincia pasa a ser obligatoria), `State:name` en el formato de dirección del país y provincias activas. `scripts/ps_setup_address.php` lo hace de forma idempotente.
+- **Zona de la provincia**: `Address::getZoneById` da prioridad a la zona de la provincia sobre la del país; si las provincias están en otra zona, los transportistas de la zona del país no salen. El script las pasa a la zona del país.
+- El campo País debe venir antes que Provincia en el formulario; la provincia aparece al elegir país porque el formulario se recarga por país.
