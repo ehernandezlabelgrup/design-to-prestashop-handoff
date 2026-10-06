@@ -380,6 +380,19 @@ def cmd_check(args):
         set_status(state, step["id"], CHECK_OK if good else CHECK_FAIL, "automático OK" if good else "ver salida de check")
         print(f"\n{sum(ok for _, ok, _ in rows)}/{len(rows)} aserciones. Siguiente: " + ("enseña al maquetador qué revisar y espera su OK." if good else "corrige los ❌ y vuelve a ejecutar check."))
         return
+    if step.get("checkProfile") == "readme":
+        cfg = step.get("readme", {})
+        cmd = [sys.executable, str(HERE / "make_readme.py"), "--handoff", str(ROOT), "--theme-dir", cfg.get("themeDir", ""), "--ps-root", cfg.get("psRoot", "")]
+        code = subprocess.run(cmd).returncode
+        readme = ROOT / "README-ENTREGA.md"
+        text = readme.read_text(encoding="utf-8") if readme.is_file() else ""
+        missing = [h for h in ("## Módulos propios creados", "## Módulos de terceros", "## Overrides y piezas del tema", "## Configuración relevante", "## Estado de la tienda", "## Pasos del plan") if h not in text]
+        for h in missing:
+            print(f"❌ falta la sección «{h[3:]}» en README-ENTREGA.md")
+        good = code == 0 and not missing
+        set_status(state, step["id"], CHECK_OK if good else CHECK_FAIL, "automático OK" if good else "ver salida de check")
+        print("\nSiguiente: " + ("enseña README-ENTREGA.md al maquetador y espera su OK." if good else "corrige los ❌ y vuelve a ejecutar check."))
+        return
     if step.get("checkProfile") == "e2e":
         e2e = step.get("e2e", {})
         cmd = [sys.executable, str(HERE / "e2e_checkout.py"), "--url", args.url, "--product-path", e2e.get("productPath", "/"),

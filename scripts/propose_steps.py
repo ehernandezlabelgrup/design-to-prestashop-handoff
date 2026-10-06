@@ -22,6 +22,13 @@ def slug(route: str) -> str:
 
 def prep_steps(with_demo: bool) -> list:
     steps = [
+        {"id": "prep-inventario", "title": "Inventario inicial de la tienda", "kind": "prep", "dependsOn": [],
+         "summary": "ANTES de tocar nada: sudo -u www-data php scripts/ps_inventory.php --ps-root=… --theme=… --out=/tmp/inicial.json --own-prefix=… y copiarlo a "
+                    "design/inventario-inicial.json. Sirve para que el README de entrega diga qué módulos se instalaron o activaron y qué configuración cambió. "
+                    "Desde aquí, cada cambio hecho a mano en la tienda se anota en validation/cambios-tienda.md (una línea por cambio).",
+         "docs": ["docs/00-reglas-equipo.md"],
+         "acceptance": ["Existe design/inventario-inicial.json con los módulos, transportistas, zonas y configuración de partida",
+                        "Existe validation/cambios-tienda.md (aunque esté vacío) para ir anotando los cambios"]},
         {"id": "prep-imagenes", "title": "Tipos de imagen", "kind": "prep", "dependsOn": [],
          "summary": "Crear los tipos de imagen de PrestaShop según docs/07-ajustes-imagenes.md.",
          "docs": ["docs/07-ajustes-imagenes.md"],
@@ -147,6 +154,22 @@ def final_steps() -> list:
                        "validation/revision-diseno.md: las páginas estáticas, la home, el listado, la ficha, la búsqueda, el acceso y la 404 siguen el diseño (cada ❌ se corrige; la 404 sin diseño se confirma con quien diseñó)"]}]
 
 
+def readme_step() -> dict:
+    """Último paso del plan: README de entrega con lo que se ha creado, modificado y configurado."""
+    return {"id": "readme-entrega", "title": "README de entrega · qué se ha hecho", "kind": "final", "route": "inicio", "dependsOn": [], "url": "/",
+            "checkProfile": "readme", "readme": {"themeDir": "<ruta/themes/mitema>", "psRoot": "<ruta/de/la/tienda>"},
+            "summary": "ÚLTIMO paso, cuando todo lo demás está hecho. Para que quien coja el proyecto sepa qué se ha realizado: 1) inventario final de la tienda "
+                       "(sudo -u www-data php scripts/ps_inventory.php --ps-root=… --theme=… --out=/tmp/final.json --own-prefix=… y copiarlo a design/inventario-final.json); "
+                       "2) scripts/make_readme.py genera README-ENTREGA.md con los módulos propios creados, los de terceros (y, si hay inventario inicial, cuáles se "
+                       "instalaron/activaron), los overrides del tema, la configuración cambiada, transportistas, zonas, estados, CMS, catálogo, traducciones, pasos "
+                       "aplazados, decisiones por confirmar y la última revisión de diseño. El inventario INICIAL (design/inventario-inicial.json) se saca al empezar, "
+                       "antes de tocar la tienda; sin él, el README no puede decir qué cambió. Los cambios hechos a mano se anotan en validation/cambios-tienda.md.",
+            "acceptance": ["Existe README-ENTREGA.md con las secciones: módulos propios, módulos de terceros, overrides del tema, configuración, estado de la tienda y pasos",
+                           "Cada módulo propio aparece con sus ficheros y cada override de módulo de terceros con el módulo al que sustituye",
+                           "Están las decisiones por confirmar (validation/decisiones.md) y la última revisión de diseño",
+                           "Alguien que no ha trabajado en el proyecto entiende, solo con el README, qué se hizo y por dónde seguir"]}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--work", required=True, type=Path)
@@ -161,7 +184,7 @@ def main():
     skip = {r for r in args.skip_routes.split(",") if r}
     routes = [r for r in structure["routes"] if r not in skip]
     guide = next((r for r in structure["routes"] if r in ("guia", "guide", "styleguide")), routes[0])
-    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes) + [native_states_step(), identity_step()] + final_steps()
+    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes) + [native_states_step(), identity_step()] + final_steps() + [readme_step()]
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"steps": steps}, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"OK · esqueleto con {len(steps)} pasos → {args.out}")
