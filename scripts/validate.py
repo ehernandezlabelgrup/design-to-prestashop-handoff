@@ -129,6 +129,10 @@ def check_steps(root: Path, errors: list):
         errors.extend(f"{label}: depende de {d}, que no existe" for d in step.get("dependsOn", []) if d not in ids)
         if step["kind"] != "prep" and not step.get("acceptance"):
             errors.append(f"{label}: sin criterios de revisión")
+        if "agotad" in (step["id"] + " " + step.get("title", "")).lower() and step["kind"] != "prep":
+            text = " ".join(step.get("acceptance", [])).lower()
+            if "avísame" not in text and "emailalerts" not in text:
+                errors.append(f"{label}: el paso de producto agotado debe incluir el aviso de reposición «Avísame» (ps_emailalerts) entre sus criterios, aunque el diseño no lo dibuje")
         if step["kind"] in ("global", "section") and not step.get("designSelector"):
             errors.append(f"{label}: falta designSelector")
         if step["kind"] not in ("prep", "final") and not step.get("route"):

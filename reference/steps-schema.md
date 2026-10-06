@@ -32,3 +32,13 @@
 `scripts/e2e_checkout.py`: `productPath` (producto con stock, sin combinaciones obligatorias), `expectHeadings` (títulos que el diseño
 tiene en el pago), `expectConfirmation` (texto de la confirmación) y los nombres de las capturas de diseño (`designCheckout`,
 `designConfirmation`, en `renders/`). `steps.py check prueba-final --url <tienda>` lo ejecuta y escribe `validation/prueba-final.md`.
+
+
+## Pasos de la ficha que se añaden aunque el diseño no los dibuje
+
+El diseño casi nunca incluye los estados nativos de la ficha. El paso de **producto agotado** (`producto-agotado`) debe llevar, en sus criterios de revisión (`acceptance`), el aviso de reposición:
+
+- «Con el producto agotado sale el aviso nativo de reposición (ps_emailalerts): email para invitados, botón «Avísame cuando esté disponible» y el mensaje de confirmación con el estilo del diseño»
+- «El aviso se pinta solo con el gancho de ps_emailalerts (sin botones de compartir) y no rompe el JS del módulo»
+
+Si el diseño trae su propio bloque «Avísame», se maqueta tal cual; si no, se monta con los tokens del diseño y se anota en `validation/decisiones.md`.
