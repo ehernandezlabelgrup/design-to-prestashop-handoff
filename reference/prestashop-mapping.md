@@ -150,3 +150,12 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 - **Métodos de pago**: se desactivan los que el diseño no tiene (`prestashop:module disable ps_checkpayment ps_cashondelivery ps_checkout`). Si el cliente aún no ha elegido pasarela de tarjeta, un módulo de pruebas con `PaymentOption` + controlador de validación (`validateOrder`) permite probar el flujo completo; se sustituye por la pasarela real. La transferencia usa `ps_wirepayment` (`BANK_WIRE_OWNER`, `BANK_WIRE_DETAILS`, `BANK_WIRE_ADDRESS`).
 - **Condiciones de venta obligatorias**: `PS_CONDITIONS_CMS_ID` apunta a la página CMS de condiciones de venta; el texto del enlace es la traducción de «I agree to the [terms of service]…».
 - **Pruebas lentas en servidores pequeños**: lanzar los scripts de navegador con `timeout` y dejarlos escribir a un fichero; un Chromium colgado puede dejar sin procesador a la propia tienda de pruebas.
+
+## Pago en una página (ps_onepagecheckout): trampas verificadas
+
+- El módulo **no preselecciona** método de pago (el botón de pagar queda desactivado); si el diseño trae uno elegido, preseleccionarlo desde `custom.js` (clic en la primera etiqueta una vez cargados) y ordenar los módulos en el hook `paymentOptions`.
+- «Usar otra dirección de envío» **vacía el país** al abrir el modal (`resetModalFields`): sin override del módulo, reponerlo desde `custom.js` en `shown.bs.modal` y lanzar `change` para que el módulo reconstruya los campos (Provincia). Los tests deben esperar ~2,5 s antes de rellenar.
+- `address-list.tpl` usa utilidades de Bootstrap con `!important` (`border`, `p-2`, `rounded-*`, `margin-top` en línea): overridearlo en el tema para poder estilarlo.
+- Los contenedores de hooks vacíos del envío (`#extra_carrier`, `#hook-display-after-carrier`, `#delivery-options__hook`) suman separación: ocultarlos con `:not(:has(*))`.
+- Hacer que toda la caja del método de pago active su radio: `label::after { position:absolute; inset:0 }` con la caja en `position:relative`.
+- El modal de dirección tiene dos disparadores `data-type="create"` (entrega y facturación): los tests deben acotar por `data-bs-target="#modal-delivery"`.

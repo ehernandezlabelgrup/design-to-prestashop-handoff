@@ -229,7 +229,7 @@ def flow_registered(browser, report: Report, args, headings: list):
     add_to_cart(page, args)
     page.goto(args.url + args.order_path, wait_until="domcontentloaded")
     page.wait_for_timeout(3000)
-    new_item = page.locator('.opc-address-item[data-type="create"]').first
+    new_item = page.locator('.opc-address-item[data-type="create"][data-bs-target="#modal-delivery"]').first
     if not new_item.count():
         report.add(flow, "opción «usar otra dirección»", "fail", "no aparece la lista de direcciones con la opción de crear una nueva")
         return
@@ -237,10 +237,11 @@ def flow_registered(browser, report: Report, args, headings: list):
     new_item.click()
     modal = page.locator("#modal-delivery")
     modal.wait_for(state="visible")
+    page.wait_for_timeout(2500)  # el módulo reconstruye los campos al fijar el país; rellenar antes se pierde
     fill_fields(modal, NEW_ADDRESS, args.state)
-    page.click("#submit-address-modal")
+    page.click("#modal-delivery #submit-address-modal")
     page.wait_for_timeout(4000)
-    selected = page.locator(".opc-address-item.selected").first
+    selected = page.locator(".opc-address-item.selected", has_text=NEW_ADDRESS["address1"]).first
     report.add(flow, "la dirección nueva queda elegida", "ok" if selected.count() and NEW_ADDRESS["address1"] in (selected.text_content() or "") else "fail",
                (selected.text_content() or "").strip().replace("\n", " ")[:80] if selected.count() else "sin dirección seleccionada")
     finish_purchase(page, report, flow, args, headings, expect_text=NEW_ADDRESS["address1"])
