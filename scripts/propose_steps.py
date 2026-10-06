@@ -136,12 +136,15 @@ def final_steps() -> list:
         "summary": "SOLO cuando todo el resto del plan está maquetado y aprobado (es el último paso). Con un navegador real (scripts/e2e_checkout.py), tres compras: 1) como invitado, solo si la tienda tiene el modo invitado "
                    "activo (si no, se anota y se salta); 2) como usuario registrado: primero se registra y después compra; 3) como usuario "
                    "registrado creando una dirección nueva en el pago. En cada pantalla se compara con el diseño y se INFORMA de todo lo "
-                   "que no cuadre (altura, títulos, textos sin traducir, azul de Bootstrap, scroll horizontal).",
+                   "que no cuadre (altura, títulos, textos sin traducir, azul de Bootstrap, scroll horizontal). ADEMÁS de las compras, "
+                   "scripts/design_review.py revisa si siguen el diseño las páginas estáticas (sobre, envíos, FAQ, contacto, políticas), la home, "
+                   "el listado, la ficha, la búsqueda, el acceso y la 404, y escribe validation/revision-diseno.md.",
         "acceptance": ["Las tres compras terminan en la confirmación de pedido (la de invitado, solo si el modo invitado está activo)",
                        "En el pago salen envíos y métodos de pago tras rellenar la dirección",
                        "La compra con dirección nueva muestra esa dirección en la confirmación",
                        "El informe validation/prueba-final.md se ha revisado: cada ⚠️ «no cuadra con el diseño» se corrige o se acepta por escrito",
-                       "Sin errores de JavaScript en consola en ninguno de los tres flujos"]}]
+                       "Sin errores de JavaScript en consola en ninguno de los tres flujos",
+                       "validation/revision-diseno.md: las páginas estáticas, la home, el listado, la ficha, la búsqueda, el acceso y la 404 siguen el diseño (cada ❌ se corrige; la 404 sin diseño se confirma con quien diseñó)"]}]
 
 
 def main():

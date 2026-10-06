@@ -387,8 +387,10 @@ def cmd_check(args):
                "--expect-confirmation", e2e.get("expectConfirmation", ""), "--design-checkout", e2e.get("designCheckout", "checkout"),
                "--design-confirmation", e2e.get("designConfirmation", "confirmacion")]
         code = subprocess.run(cmd).returncode
-        set_status(state, step["id"], CHECK_OK if code == 0 else CHECK_FAIL, "automático OK" if code == 0 else "ver validation/prueba-final.md")
-        print("\nSiguiente: " + ("enseña al maquetador el informe validation/prueba-final.md (sobre todo los ⚠️) y espera su OK." if code == 0
+        review = subprocess.run([sys.executable, str(HERE / "design_review.py"), "--url", args.url.rstrip("/"), "--handoff", str(ROOT)]).returncode
+        code = code or review
+        set_status(state, step["id"], CHECK_OK if code == 0 else CHECK_FAIL, "automático OK" if code == 0 else "ver validation/prueba-final.md y validation/revision-diseno.md")
+        print("\nSiguiente: " + ("enseña al maquetador los informes validation/prueba-final.md y validation/revision-diseno.md (sobre todo los ⚠️) y espera su OK." if code == 0
                               else "corrige los ❌ y vuelve a ejecutar check."))
         return
     if step.get("checkProfile") == "tokens":

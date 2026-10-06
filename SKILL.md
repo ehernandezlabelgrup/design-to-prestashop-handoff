@@ -82,6 +82,10 @@ Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automá
 - No redondear valores del diseño.
 - No dar el handoff por bueno sin haber pasado `validate.py`.
 
+## Prueba final: compras y revisión de diseño
+
+El último paso (`prueba-final`) hace dos cosas, y las dos al final de todo: 1) las tres compras con navegador real (`scripts/e2e_checkout.py`) y 2) `scripts/design_review.py`, que repasa si **siguen el diseño** las páginas estáticas (sobre, envíos, FAQ, contacto, políticas), la home, el listado, la ficha, la búsqueda, el acceso y la 404, y escribe `validation/revision-diseno.md`. `steps.py check prueba-final` lanza ambas; las páginas de sesión (cesta, pago, cuenta) usan `HANDOFF_STORAGE_STATE`. Si el diseño no trae 404, se audita lo mínimo (custom.css, un H1, sin estilos en línea ni Bootstrap por defecto) y se avisa para que lo confirme quien diseñó.
+
 ## Estados nativos que el diseño no trae
 
 Un diseño nunca dibuja todo lo que PrestaShop genera. Antes del favicon hay un paso `estados-nativos`: se provocan en el navegador los avisos y estados nativos (aviso «Tu carrito contiene N de este producto» al recargarse la ficha, producto añadido, cantidad mínima, stock bajo, errores de formulario, descuento aplicado, 404…) y se adaptan con el mismo lenguaje de cajas del diseño (override de `_partials/notifications.tpl`). Lo que el diseño no trae se anota en `validation/decisiones.md` para que lo confirme quien diseñó. Mejor aún: pedir al diseñador que los incluya en el HTML.
