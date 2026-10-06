@@ -167,3 +167,8 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 - La referencia del pedido es aleatoria (letras); un prefijo tipo `JC-48213` exige override de `Order::generateReference`.
 - **Mi cuenta**: `customer/page.tpl` + `components/account-menu.tpl` + `customer/my-account.tpl`. Los enlaces de módulos (alertas `ps_emailalerts/account`, favoritos `blockwishlist/lists`, RGPD `psgdpr/gdpr`) se construyen con `$link->getModuleLink`; el gancho `displayCustomerAccount` los duplicaría. «Por defecto» en direcciones no existe en PrestaShop. «Tratamiento» (Sr./Sra.) se quita en Clientes > Títulos.
 - `compare.py` / `steps.py check` necesitan `HANDOFF_STORAGE_STATE` (sesión con cesta o cliente) para cesta, pago, confirmación y cuenta; la página del diseño estático nunca usa la sesión.
+
+## Avisos nativos y stock de las pruebas
+
+- `ProductController` añade el aviso «Tu carrito contiene %1s de este producto» (notificación `info`) cada vez que la ficha se recarga con el producto en la cesta; sale por `_partials/notifications.tpl`. Un override de esa plantilla da estilo a los cuatro tipos (info, aviso, éxito, error) de toda la tienda.
+- **Las compras de prueba consumen stock real**: tras pasar `e2e_checkout.py` repón el stock de los productos usados (`StockAvailable::setQuantity`) o la ficha saldrá «Agotado» al siguiente que la revise.

@@ -283,6 +283,7 @@ def main():
     out = args.handoff / "validation" / "prueba-final.md"
     report.write(out)
     print(f"\nInforme: {out} · {time.time() - started:.0f} s")
+    print("Aviso: las compras de prueba han gastado stock real; repón el del producto usado (StockAvailable::setQuantity) antes de seguir revisando.")
     sys.exit(1 if report.failed else 0)
 
 

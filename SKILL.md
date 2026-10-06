@@ -82,6 +82,10 @@ Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automá
 - No redondear valores del diseño.
 - No dar el handoff por bueno sin haber pasado `validate.py`.
 
+## Estados nativos que el diseño no trae
+
+Un diseño nunca dibuja todo lo que PrestaShop genera. Antes del favicon hay un paso `estados-nativos`: se provocan en el navegador los avisos y estados nativos (aviso «Tu carrito contiene N de este producto» al recargarse la ficha, producto añadido, cantidad mínima, stock bajo, errores de formulario, descuento aplicado, 404…) y se adaptan con el mismo lenguaje de cajas del diseño (override de `_partials/notifications.tpl`). Lo que el diseño no trae se anota en `validation/decisiones.md` para que lo confirme quien diseñó. Mejor aún: pedir al diseñador que los incluya en el HTML.
+
 ## Antes de la prueba final: favicon y captura del tema
 > Los dos últimos pasos del plan (`tema-identidad` y `prueba-final`) se hacen **cuando todo lo demás está maquetado y aprobado**, no pieza a pieza: `steps.py` no deja empezarlos mientras haya pasos anteriores sin aprobar. Se puede usar `e2e_checkout.py` suelto como red de seguridad mientras se maqueta el pago, pero el paso se da por hecho solo al final.
 El paso `tema-identidad` genera el favicon (`scripts/theme_assets.py`: monograma con los colores y la tipografía de la marca, o el favicon del diseño si lo trae; además `apple-touch-icon.png`, `icon-192.png` e `icon-512.png`) y la captura `themes/<tema>/preview.png` (500×746, recorte vertical de la home real). `scripts/ps_set_favicon.php` lo aplica en PrestaShop (`img/favicon.ico`, `PS_FAVICON` y `PS_FAVICON_UPDATE_TIME`). Se hace con el tema ya terminado, porque la captura sale de la home real.

@@ -99,6 +99,21 @@ def page_steps(routes: list) -> list:
                       "acceptance": ["Escritorio y móvil como el diseño", "Textos con traducciones", "Sin estilo en línea"]})
     return steps
 
+def native_states_step() -> dict:
+    """Antes del favicon: estados y avisos nativos de PrestaShop que el diseño no dibuja."""
+    return {"id": "estados-nativos", "title": "Estados y avisos nativos que el diseño no trae", "kind": "final", "route": "inicio", "dependsOn": [], "url": "/",
+            "summary": "SOLO cuando el resto de páginas está maquetado. Los diseños casi nunca incluyen los avisos y estados que PrestaShop genera solo "
+                       "(p. ej. «Tu carrito contiene 1 de este producto» al recargarse la ficha tras añadir a la cesta, producto añadido, cantidad mínima, "
+                       "stock bajo, errores de formulario, sesión caducada, código de descuento aplicado, 404, mantenimiento). El maquetador los provoca "
+                       "uno a uno en el navegador, comprueba que ninguno sale con el azul/verde/rojo por defecto de Bootstrap y los adapta al diseño "
+                       "(notifications.tpl y CSS), usando los mismos tokens que las cajas del diseño. Cualquier estado sin referencia se anota en "
+                       "validation/decisiones.md para que el diseñador lo confirme.",
+            "acceptance": ["Añadir un producto a la cesta y recargarse la ficha enseña el aviso con el estilo del diseño, no el azul de Bootstrap",
+                           "Un error de formulario, un aviso de éxito y uno de información se ven con los colores de la marca",
+                           "Cada aviso se puede cerrar y su texto sale del sistema de traducciones",
+                           "Los estados que el diseño no dibuja quedan listados en validation/decisiones.md"]}
+
+
 def identity_step() -> dict:
     """Penúltimo paso: favicon y captura del tema (preview.png)."""
     return {"id": "tema-identidad", "title": "Favicon y captura del tema", "kind": "final", "route": "inicio", "dependsOn": [], "url": "/",
@@ -143,7 +158,7 @@ def main():
     skip = {r for r in args.skip_routes.split(",") if r}
     routes = [r for r in structure["routes"] if r not in skip]
     guide = next((r for r in structure["routes"] if r in ("guia", "guide", "styleguide")), routes[0])
-    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes) + [identity_step()] + final_steps()
+    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes) + [native_states_step(), identity_step()] + final_steps()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"steps": steps}, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"OK · esqueleto con {len(steps)} pasos → {args.out}")
