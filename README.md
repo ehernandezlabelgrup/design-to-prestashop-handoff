@@ -19,3 +19,11 @@ Instalación global (recomendada): una vez por persona, sirve para todos los dis
 
 ## Usar
 En Claude Code: «crea el handoff de PrestaShop para `ruta/index.html`». El flujo completo está en `SKILL.md`.
+
+## Quién puede cambiar esta skill
+El repo es público: cualquiera puede leerlo, clonarlo e instalarlo, pero **solo pueden subir cambios dos personas**: Emilio Hernandez (`ehernandezlabelgrup`) y Oscar (`ollorentelabelgrup`).
+
+- **Todo cambio va por Pull Request.** No se sube directo a `main`, tampoco los dos mantenedores.
+- **No hace falta revisión.** Quien abre el PR puede fusionarlo él mismo; la otra persona puede revisarlo si quiere, pero no es obligatorio.
+- No se permiten force push ni borrar `main`.
+- Los PRs, issues y comentarios de terceros están bloqueados. Si alguien quiere proponer algo, que se lo diga a uno de los dos.
