@@ -99,6 +99,17 @@ def page_steps(routes: list) -> list:
                       "acceptance": ["Escritorio y móvil como el diseño", "Textos con traducciones", "Sin estilo en línea"]})
     return steps
 
+def identity_step() -> dict:
+    """Penúltimo paso: favicon y captura del tema (preview.png)."""
+    return {"id": "tema-identidad", "title": "Favicon y captura del tema", "kind": "final", "route": "inicio", "dependsOn": [], "url": "/",
+            "summary": "Con tema y home terminados, scripts/theme_assets.py genera el favicon (monograma de la marca con sus colores y tipografía, "
+                       "o el favicon del diseño si lo trae) y themes/<tema>/preview.png (500×746, un recorte vertical de la home real). "
+                       "scripts/ps_set_favicon.php aplica el favicon (img/favicon.ico, PS_FAVICON y PS_FAVICON_UPDATE_TIME).",
+            "acceptance": ["La pestaña del navegador muestra el favicon (también a 16 px) y no el de PrestaShop",
+                           "Diseño > Tema y logotipo enseña la captura nueva del tema, no la de Hummingbird",
+                           "Existen apple-touch-icon.png (180), icon-192.png y icon-512.png en el handoff",
+                           "El favicon usa los colores y la tipografía del diseño (o el favicon del propio diseño)"]}
+
 
 def final_steps() -> list:
     """Último paso del plan: compras de extremo a extremo con un navegador real, comparando con el diseño."""
@@ -132,7 +143,7 @@ def main():
     skip = {r for r in args.skip_routes.split(",") if r}
     routes = [r for r in structure["routes"] if r not in skip]
     guide = next((r for r in structure["routes"] if r in ("guia", "guide", "styleguide")), routes[0])
-    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes) + final_steps()
+    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes) + [identity_step()] + final_steps()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"steps": steps}, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"OK · esqueleto con {len(steps)} pasos → {args.out}")
