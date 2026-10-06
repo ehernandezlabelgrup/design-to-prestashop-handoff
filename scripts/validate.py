@@ -25,7 +25,7 @@ def rgb_to_hex(rgb: str) -> str:
     return "#{:02x}{:02x}{:02x}".format(*nums) if len(nums) == 3 else ""
 
 
-def known_hexes(raw: dict) -> set:
+def known_hexes(raw: dict, source_dir: Path = None) -> set:
     found = set()
     for viewport in raw.get("viewports", {}).values():
         for key in ("colors", "backgrounds", "borders"):
@@ -33,6 +33,10 @@ def known_hexes(raw: dict) -> set:
                 found.update(rgb_to_hex(m) for m in re.findall(r"rgba?\([^)]*\)", value))
     found.update(v.lower() for v in raw.get("stylesheets", {}).get("rootVars", {}).values()
                  if v.startswith("#"))
+    # estados que no salen en las capturas (hover, error, éxito…) solo están en el código del diseño
+    if source_dir and source_dir.is_dir():
+        for html in source_dir.rglob("*.html"):
+            found.update(c.lower() for c in re.findall(r"#[0-9a-fA-F]{6}\b", html.read_text(encoding="utf-8", errors="replace")))
     # colores que solo aparecen en reglas :hover/:focus
     sheets = raw.get("stylesheets", {})
     for rule in sheets.get("hover", []) + sheets.get("focus", []):
@@ -67,7 +71,7 @@ def check_tokens(root: Path, errors: list):
     raw_path, css_path = root / "design" / "raw-tokens.json", root / "tokens.css"
     if not (raw_path.is_file() and css_path.is_file()):
         return
-    known = known_hexes(json.loads(raw_path.read_text()))
+    known = known_hexes(json.loads(raw_path.read_text()), root / "design" / "source")
     for color in sorted(set(c.lower() for c in HEX_RE.findall(css_path.read_text()))):
         if len(color) == 7 and color not in known:
             errors.append(f"tokens.css: {color} no aparece en raw-tokens.json (¿inventado?)")

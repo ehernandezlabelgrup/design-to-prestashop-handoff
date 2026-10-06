@@ -180,3 +180,9 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 - Override del tema de `modules/ps_emailalerts/views/templates/hook/product.tpl`: el JS del módulo busca `.js-mailalert`, sus **hijos directos** `input[type=email]` y `.js-mailalert-add`, `.gdpr_consent_wrapper` y `.js-mailalert-alerts` (donde inyecta un `<article class="alert alert-success|danger">`): conservar esa estructura y estilar `.alert` dentro de `.js-mailalert-alerts`.
 - Requisitos: `MA_CUSTOMER_QTY=1`, gestión de stock activa y producto sin pedidos con stock agotado permitidos.
 - El diseño casi nunca trae este bloque: se añade al paso `estados-nativos` (producto agotado: avisos de reposición) y se anota en `validation/decisiones.md`.
+
+## Capturas estables y favicon
+
+- **Cursor de texto en las capturas**: Playwright oculta el cursor por defecto (`caret="hide"`). **No** usar `caret="initial"`: deja el cursor parpadeando y las capturas dejan de ser estables (comprobado: 12 capturas con el valor por defecto dan 1 imagen; con `initial`, 2). Si aun así aparece, quitar el foco antes de capturar (`document.activeElement.blur()`).
+- **Favicon**: la URL del favicon se versiona con `PS_IMG_UPDATE_TIME` (`FrontController::getTemplateVarShop`), no con `PS_FAVICON_UPDATE_TIME`: `ps_set_favicon.php` actualiza los dos o el navegador sigue con el antiguo.
+- **Validador de colores**: `validate.py` acepta los hex de `raw-tokens.json` y también los que aparecen en `design/source/**/*.html` (hover, error y éxito no salen en las capturas).
