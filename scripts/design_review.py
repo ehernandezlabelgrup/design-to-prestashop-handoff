@@ -16,7 +16,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
+from urllib.parse import quote, urljoin, urlparse
 from urllib.request import urlopen
 
 HERE = Path(__file__).resolve().parent
@@ -50,6 +50,7 @@ def run_page(handoff: Path, route: str, url: str) -> tuple:
 
 
 def fetch_text(url: str) -> str:
+    url = quote(url, safe=":/?&=#%+@,;~")   # rutas con ñ o tildes (p. ej. /recuperar-contraseña) deben ir codificadas
     try:
         with urlopen(url, timeout=30) as response:  # noqa: S310 - URL de la tienda que se revisa
             return response.read().decode("utf-8", "replace")
