@@ -66,7 +66,7 @@ def load_steps() -> list:
 
 def group_of(step: dict):
     """Grupo de una página (sus pasos se maquetan por elementos o completos). None en prep y globales."""
-    if step["kind"] in ("prep", "global"):
+    if step["kind"] in ("prep", "global", "final"):
         return None
     return step.get("group") or step.get("route")
 
@@ -379,6 +379,17 @@ def cmd_check(args):
         good = all(ok for _, ok, _ in rows)
         set_status(state, step["id"], CHECK_OK if good else CHECK_FAIL, "automático OK" if good else "ver salida de check")
         print(f"\n{sum(ok for _, ok, _ in rows)}/{len(rows)} aserciones. Siguiente: " + ("enseña al maquetador qué revisar y espera su OK." if good else "corrige los ❌ y vuelve a ejecutar check."))
+        return
+    if step.get("checkProfile") == "e2e":
+        e2e = step.get("e2e", {})
+        cmd = [sys.executable, str(HERE / "e2e_checkout.py"), "--url", args.url, "--product-path", e2e.get("productPath", "/"),
+               "--handoff", str(ROOT), "--expect-headings", ",".join(e2e.get("expectHeadings", [])),
+               "--expect-confirmation", e2e.get("expectConfirmation", ""), "--design-checkout", e2e.get("designCheckout", "checkout"),
+               "--design-confirmation", e2e.get("designConfirmation", "confirmacion")]
+        code = subprocess.run(cmd).returncode
+        set_status(state, step["id"], CHECK_OK if code == 0 else CHECK_FAIL, "automático OK" if code == 0 else "ver validation/prueba-final.md")
+        print("\nSiguiente: " + ("enseña al maquetador el informe validation/prueba-final.md (sobre todo los ⚠️) y espera su OK." if code == 0
+                              else "corrige los ❌ y vuelve a ejecutar check."))
         return
     if step.get("checkProfile") == "tokens":
         rows = check_tokens(args.url)

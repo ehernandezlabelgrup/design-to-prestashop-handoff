@@ -100,6 +100,24 @@ def page_steps(routes: list) -> list:
     return steps
 
 
+def final_steps() -> list:
+    """Último paso del plan: compras de extremo a extremo con un navegador real, comparando con el diseño."""
+    return [{
+        "id": "prueba-final", "title": "Prueba final · compras de extremo a extremo", "kind": "final", "route": "checkout",
+        "dependsOn": [], "url": "/", "checkProfile": "e2e",
+        "e2e": {"productPath": "<ruta-de-un-producto-con-stock>", "expectHeadings": [], "expectConfirmation": "",
+                "designCheckout": "checkout", "designConfirmation": "confirmacion"},
+        "summary": "Con un navegador real (scripts/e2e_checkout.py), tres compras: 1) como invitado, solo si la tienda tiene el modo invitado "
+                   "activo (si no, se anota y se salta); 2) como usuario registrado: primero se registra y después compra; 3) como usuario "
+                   "registrado creando una dirección nueva en el pago. En cada pantalla se compara con el diseño y se INFORMA de todo lo "
+                   "que no cuadre (altura, títulos, textos sin traducir, azul de Bootstrap, scroll horizontal).",
+        "acceptance": ["Las tres compras terminan en la confirmación de pedido (la de invitado, solo si el modo invitado está activo)",
+                       "En el pago salen envíos y métodos de pago tras rellenar la dirección",
+                       "La compra con dirección nueva muestra esa dirección en la confirmación",
+                       "El informe validation/prueba-final.md se ha revisado: cada ⚠️ «no cuadra con el diseño» se corrige o se acepta por escrito",
+                       "Sin errores de JavaScript en consola en ninguno de los tres flujos"]}]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--work", required=True, type=Path)
@@ -114,7 +132,7 @@ def main():
     skip = {r for r in args.skip_routes.split(",") if r}
     routes = [r for r in structure["routes"] if r not in skip]
     guide = next((r for r in structure["routes"] if r in ("guia", "guide", "styleguide")), routes[0])
-    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes)
+    steps = prep_steps(args.demo_data == "yes") + base_steps(guide) + global_steps(routes[0]) + page_steps(routes) + final_steps()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"steps": steps}, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"OK · esqueleto con {len(steps)} pasos → {args.out}")

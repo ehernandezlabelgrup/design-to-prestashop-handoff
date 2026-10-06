@@ -131,7 +131,7 @@ def check_steps(root: Path, errors: list):
             errors.append(f"{label}: sin criterios de revisión")
         if step["kind"] in ("global", "section") and not step.get("designSelector"):
             errors.append(f"{label}: falta designSelector")
-        if step["kind"] != "prep" and not step.get("route"):
+        if step["kind"] not in ("prep", "final") and not step.get("route"):
             errors.append(f"{label}: falta route")
 
 

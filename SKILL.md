@@ -81,3 +81,11 @@ Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automá
 - No incluir material de clientes ni credenciales en la skill. Esta skill es pública; los handoffs generados se guardan fuera del repositorio.
 - No redondear valores del diseño.
 - No dar el handoff por bueno sin haber pasado `validate.py`.
+
+## Último paso del plan: prueba final de compras
+El plan termina con el paso `prueba-final`, que se ejecuta con `steps.py check prueba-final --url <tienda>` (usa `scripts/e2e_checkout.py`).
+Con un navegador real hace **tres compras** y compara cada pantalla con el diseño:
+1. **Invitado**, solo si la tienda tiene el modo invitado activo (si no, se anota y se salta).
+2. **Usuario registrado**: se registra primero y después compra.
+3. **Usuario registrado con una dirección nueva** creada en el pago.
+El informe `validation/prueba-final.md` separa los ❌ (algo falla) de los ⚠️ **«no cuadra con el diseño»** (altura de página frente a la captura, títulos que faltan, textos sin traducir, botones con el azul de Bootstrap, scroll horizontal). **Todo ⚠️ se informa al maquetador** y se corrige o se acepta por escrito antes de dar el proyecto por terminado. Solo se ejecuta contra una tienda de pruebas: crea clientes y pedidos.

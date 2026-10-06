@@ -26,3 +26,9 @@
 - `checkProfile: "styles"` + `assertions`: el paso se comprueba contrastando estilos calculados con valores **sacados del diseño** (mide los elementos del diseño de origen con Playwright). Cada aserción: `{"name": "...", "selector": "<css de la superficie de prueba>", "state": "hover|focus" (opcional), "props": {"background-color": "rgb(20, 20, 20)", ...}}`. Es lo que comprueba los pasos de base.
 - En las aserciones de `styles`, `"before": [{"press": "/"}, {"click": "<css>"}, {"fill": ["<css>", "texto"]}, {"wait": 900}]` recarga la página y ejecuta esas acciones antes de medir; sirve para estados que no están a la vista (buscador abierto, resultados, acordeón desplegado).
 - **Cobertura:** cada interacción de `docs/03` debe estar en la tabla «Cobertura de interacciones» de `docs/09` con su paso; si no tiene, falta un paso.
+
+## Paso final (`kind: "final"`)
+`prueba-final` no pertenece a una página ni lleva `route` propia obligatoria. Su `checkProfile` es `"e2e"` y su bloque `e2e` configura
+`scripts/e2e_checkout.py`: `productPath` (producto con stock, sin combinaciones obligatorias), `expectHeadings` (títulos que el diseño
+tiene en el pago), `expectConfirmation` (texto de la confirmación) y los nombres de las capturas de diseño (`designCheckout`,
+`designConfirmation`, en `renders/`). `steps.py check prueba-final --url <tienda>` lo ejecuta y escribe `validation/prueba-final.md`.
