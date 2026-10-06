@@ -159,3 +159,11 @@ Se usa SIEMPRE el módulo nativo, sin editar su código. Dónde mirarlo y qué h
 - Los contenedores de hooks vacíos del envío (`#extra_carrier`, `#hook-display-after-carrier`, `#delivery-options__hook`) suman separación: ocultarlos con `:not(:has(*))`.
 - Hacer que toda la caja del método de pago active su radio: `label::after { position:absolute; inset:0 }` con la caja en `position:relative`.
 - El modal de dirección tiene dos disparadores `data-type="create"` (entrega y facturación): los tests deben acotar por `data-bs-target="#modal-delivery"`.
+
+## Confirmación de pedido y Mi cuenta: trampas verificadas
+
+- **Confirmación (`checkout/order-confirmation.tpl`)**: el presentador no trae el país de la dirección de entrega ni el módulo de pago; un plugin del tema los saca de `Tools::getValue('id_order')` (`$order->module`, `Address`). Debe servir para tarjeta, transferencia **y contrareembolso**: el módulo decide la caja amarilla (solo transferencia, vía override de `payment_return.tpl` del módulo en el tema), el estado («Pagado / Pendiente / Pago al recibir») y los textos de «Qué pasa ahora». El nombre del pago que guarda cada módulo («Pagos por transferencia bancaria») no coincide con el del diseño: usar textos propios por módulo.
+- `jc_shop_link` y similares asignan un **array** (`$jcShop.url`); usar el array como texto da `/Array`.
+- La referencia del pedido es aleatoria (letras); un prefijo tipo `JC-48213` exige override de `Order::generateReference`.
+- **Mi cuenta**: `customer/page.tpl` + `components/account-menu.tpl` + `customer/my-account.tpl`. Los enlaces de módulos (alertas `ps_emailalerts/account`, favoritos `blockwishlist/lists`, RGPD `psgdpr/gdpr`) se construyen con `$link->getModuleLink`; el gancho `displayCustomerAccount` los duplicaría. «Por defecto» en direcciones no existe en PrestaShop. «Tratamiento» (Sr./Sra.) se quita en Clientes > Títulos.
+- `compare.py` / `steps.py check` necesitan `HANDOFF_STORAGE_STATE` (sesión con cesta o cliente) para cesta, pago, confirmación y cuenta; la página del diseño estático nunca usa la sesión.
