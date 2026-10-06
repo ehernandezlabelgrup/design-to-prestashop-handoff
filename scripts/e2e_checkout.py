@@ -185,8 +185,12 @@ def flow_guest(browser, report: Report, args, headings: list):
         report.add(flow, "compra como invitado", "skip", "el modo invitado no está activo en esta tienda (Preferencias > Pedidos)")
         return
     audit_screen(page, report, flow, "pago vacio", args, args.design_checkout, headings)
-    page.fill("#field-email", f"e2e-guest-{random.randint(1000, 9999)}@example.com")
-    accept_required(page.locator(".js-opc-contact-section"))
+    # el módulo crea el invitado en cuanto hay email y consentimientos; si se rellena la dirección antes de que termine, su
+    # cookie de sesión se pisa y el guardado falla (carrera propia del módulo): se espera a su respuesta
+    with page.expect_response(lambda r: "guestinit" in r.url, timeout=25000):
+        page.fill("#field-email", f"e2e-guest-{random.randint(1000, 9999)}@example.com")
+        accept_required(page.locator(".js-opc-contact-section"))
+    page.wait_for_timeout(1500)
     fill_fields(page.locator("#opc-delivery-address-fields"), ADDRESS, args.state)
     page.locator("#opc-delivery-address-fields [name=phone]").first.blur()
     finish_purchase(page, report, flow, args, headings)

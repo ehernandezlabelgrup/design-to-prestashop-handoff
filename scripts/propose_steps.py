@@ -102,7 +102,7 @@ def page_steps(routes: list) -> list:
 def identity_step() -> dict:
     """Penúltimo paso: favicon y captura del tema (preview.png)."""
     return {"id": "tema-identidad", "title": "Favicon y captura del tema", "kind": "final", "route": "inicio", "dependsOn": [], "url": "/",
-            "summary": "Con tema y home terminados, scripts/theme_assets.py genera el favicon (monograma de la marca con sus colores y tipografía, "
+            "summary": "SOLO cuando todo el resto del plan está maquetado y aprobado (el orden del plan lo impone). Con tema y home terminados, scripts/theme_assets.py genera el favicon (monograma de la marca con sus colores y tipografía, "
                        "o el favicon del diseño si lo trae) y themes/<tema>/preview.png (500×746, un recorte vertical de la home real). "
                        "scripts/ps_set_favicon.php aplica el favicon (img/favicon.ico, PS_FAVICON y PS_FAVICON_UPDATE_TIME).",
             "acceptance": ["La pestaña del navegador muestra el favicon (también a 16 px) y no el de PrestaShop",
@@ -118,7 +118,7 @@ def final_steps() -> list:
         "dependsOn": [], "url": "/", "checkProfile": "e2e",
         "e2e": {"productPath": "<ruta-de-un-producto-con-stock>", "expectHeadings": [], "expectConfirmation": "",
                 "designCheckout": "checkout", "designConfirmation": "confirmacion"},
-        "summary": "Con un navegador real (scripts/e2e_checkout.py), tres compras: 1) como invitado, solo si la tienda tiene el modo invitado "
+        "summary": "SOLO cuando todo el resto del plan está maquetado y aprobado (es el último paso). Con un navegador real (scripts/e2e_checkout.py), tres compras: 1) como invitado, solo si la tienda tiene el modo invitado "
                    "activo (si no, se anota y se salta); 2) como usuario registrado: primero se registra y después compra; 3) como usuario "
                    "registrado creando una dirección nueva en el pago. En cada pantalla se compara con el diseño y se INFORMA de todo lo "
                    "que no cuadre (altura, títulos, textos sin traducir, azul de Bootstrap, scroll horizontal).",
