@@ -21,6 +21,7 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
 ## Entradas que hay que tener (pregunta lo que falte)
+- **PRIMERO DE TODO, antes de cualquier otra pregunta y antes de analizar nada: la URL del repo git privado** (lo crea el usuario; tú no). Compruébala en el acto con `python3 scripts/git_repo.py check-remote <url> --save <work>` (así queda guardada en disco en `<work>/git-remote.json` y no se pierde si la sesión se compacta o se reinicia; `scaffold.py` la lee de ahí y la vuelve a comprobar): tiene que ser privada y con permiso de escritura. Si falla (pública, sin acceso o sin permiso de escritura), explica el motivo, pide otra URL o que lo corrija, y **no sigas con las demás preguntas ni con el análisis** hasta que dé OK. No es opcional.
 - Ruta del HTML principal y su carpeta de assets.
 - Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
 - Versión de PrestaShop (9 por defecto).
@@ -44,7 +45,7 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    **Datos demo (solo si el usuario dijo que sí):** `python3 scripts/find_demo_data.py --entry <index.html> --out <work>` vuelca las variables globales con datos (`demo-candidates.json`). Si el diseño no las expone (const/let), lee el fuente.
 2. **Montar el paquete**:
    ```
-   python3 scripts/scaffold.py --work <work> --entry <index.html> --out <handoff-tienda> --store "<Tienda>" --theme-slug <slug> [--demo-data yes]
+   python3 scripts/scaffold.py --work <work> --entry <index.html> --out <handoff-tienda> --git-remote <url-del-repo> --store "<Tienda>" --theme-slug <slug> [--demo-data yes]
    ```
 3. **Redactar** (aquí va el juicio del modelo). Rellena todos los huecos `{{…}}` y `<!-- MODEL: … -->`:
    - `tokens.css`: nombres semánticos; cada hex y cada px tiene que salir de `raw-tokens.json`. Si el diseño usa estilos en línea o no tiene variables, deduce los tokens de los valores más frecuentes y avisa. Anota las discrepancias entre el código y lo que describan los docs.
