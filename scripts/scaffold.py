@@ -72,9 +72,8 @@ def copy_work_files(work: Path, entry: Path, out: Path):
 def install_tools(out: Path):
     tools = out / "tools"
     tools.mkdir(exist_ok=True)
-    for name in ("steps.py", "compare.py", "git_repo.py", "ps_seed_demo.php", "ps_set_translations.php"):
+    for name in ("steps.py", "compare.py", "ps_seed_demo.php", "ps_set_translations.php"):
         shutil.copy2(SKILL_ROOT / "scripts" / name, tools / name)
-    shutil.copy2(SKILL_ROOT / "templates" / "gitignore-prestashop.tmpl", tools / "gitignore-prestashop.tmpl")
 
 
 def build_steps(work: Path, out: Path, demo: str):
@@ -83,22 +82,11 @@ def build_steps(work: Path, out: Path, demo: str):
     subprocess.run([sys.executable, str(out / "tools" / "steps.py"), "status"], check=True, stdout=subprocess.DEVNULL)
 
 
-def check_git_remote(url: str):
-    """El repo privado es obligatorio: sin URL válida no se monta el paquete."""
-    sys.path.insert(0, str(SKILL_ROOT / "scripts"))
-    import git_repo
-    errors = git_repo.check_remote(url)
-    if errors:
-        sys.exit("\n".join(f"❌ {e}" for e in errors) + "\nSin un repo git privado donde puedas escribir no se continúa.")
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--work", required=True, type=Path)
     ap.add_argument("--entry", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
-    ap.add_argument("--git-remote",
-                    help="URL del repo git PRIVADO donde el usuario puede escribir. Opcional: si falta, se pide en el paso prep-git")
     ap.add_argument("--store", required=True)
     ap.add_argument("--theme-slug", required=True)
     ap.add_argument("--ps-version", default=DEFAULT_PS_VERSION)
@@ -108,11 +96,6 @@ def main():
     args = ap.parse_args()
     if not args.entry.is_file():
         sys.exit(f"No existe el HTML de entrada: {args.entry}")
-    saved = args.work / "git-remote.json"
-    if not args.git_remote and saved.is_file():
-        args.git_remote = json.loads(saved.read_text(encoding="utf-8"))["remote"]
-    if args.git_remote:  # opcional aquí: si no llega, se pide en el paso prep-git
-        check_git_remote(args.git_remote)
 
     values = {
         "STORE": args.store, "THEME_SLUG": args.theme_slug, "PS_VERSION": args.ps_version,
@@ -124,8 +107,6 @@ def main():
     copy_templates(args.out, values, args.demo_data == "yes")
     copy_work_files(args.work, args.entry.resolve(), args.out)
     install_tools(args.out)
-    if args.git_remote:
-        (args.out / "design" / "git-remote.json").write_text(json.dumps({"remote": args.git_remote}, indent=1), encoding="utf-8")
     build_steps(args.work, args.out, args.demo_data)
     print(f"OK · paquete creado en {args.out}. Faltan los huecos del modelo (ver validate.py).")
 

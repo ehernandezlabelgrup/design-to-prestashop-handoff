@@ -198,8 +198,6 @@ def resolve_target(steps: list, state: dict, step: dict):
 
 
 def cmd_next(args):
-    git_gate(next((s['id'] for s in load_steps() if status_of(load_state(), s['id']) not in SATISFIED), ""))
-    pull_git()
     steps, state = load_steps(), load_state()
     for step in steps:
         if status_of(state, step["id"]) in SATISFIED:
@@ -218,8 +216,6 @@ def cmd_next(args):
 
 
 def cmd_start(args):
-    git_gate(args.id)
-    pull_git()
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
     target = resolve_target(steps, state, step)
@@ -247,8 +243,6 @@ def cmd_start(args):
 def cmd_defer(args):
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
-    if step["id"] == GIT_STEP:
-        sys.exit("prep-git es obligatorio: no se puede aplazar. Sin repo git privado el proceso no continúa.")
     set_status(state, step["id"], DEFERRED, args.reason or "aplazado por el maquetador")
     print(f"⏸ «{step['title']}» aplazado. No bloquea los siguientes; vuelve con `reopen {step['id']}`.")
 
@@ -374,7 +368,6 @@ def check_styles(url: str, assertions: list) -> list:
 
 
 def cmd_check(args):
-    git_gate(args.id)
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
     group = group_of(step)
@@ -437,63 +430,9 @@ def cmd_check(args):
                            else "corrige los ❌ y vuelve a ejecutar check."))
 
 
-GIT_CONFIG_FILE = ROOT / "validation" / "git.json"
-
-
-GIT_STEP = "prep-git"
-
-
-def git_gate(step_id: str = ""):
-    """Puerta del repo: sin repo privado configurado, el proceso queda en espera (nada avanza)."""
-    if step_id == GIT_STEP or GIT_CONFIG_FILE.is_file():
-        return
-    sys.exit("⏳ PROCESO EN ESPERA: falta el repositorio git privado (paso prep-git). "
-             "Pide al usuario la URL del repo y ejecuta `python3 tools/git_repo.py setup --ps-root <ruta> --remote <url> --handoff .`. "
-             "Hasta entonces no se empieza, comprueba ni aprueba ningún otro paso.")
-
-
-def verify_git_ready():
-    """Para aprobar prep-git: el remoto sigue siendo privado y escribible y existen main y develop."""
-    if not GIT_CONFIG_FILE.is_file():
-        sys.exit("No se puede aprobar prep-git: falta validation/git.json (ejecuta `git_repo.py setup`).")
-    import git_repo
-    config = json.loads(GIT_CONFIG_FILE.read_text(encoding="utf-8"))
-    errors = git_repo.check_remote(config["remote"])
-    heads = git_repo.remote_heads(config["remote"]) or []
-    errors += [f"falta la rama «{b}» en el remoto" for b in (config["main"], config["develop"]) if b not in heads]
-    if errors:
-        sys.exit("No se puede aprobar prep-git:\n" + "\n".join(f"  ❌ {e}" for e in errors))
-
-
-def sync_git(step_ids: list):
-    """Con el repo configurado (prep-git), cada paso aprobado se sube a develop."""
-    if not GIT_CONFIG_FILE.is_file():
-        return
-    message = f"feat: validate step {', '.join(step_ids)}"
-    result = subprocess.run([sys.executable, str(HERE / "git_repo.py"), "sync", "--handoff", str(ROOT),
-                             "--message", message], capture_output=True, text=True)
-    print(result.stdout.strip() or result.stderr.strip())
-    if result.returncode != 0:
-        print("⚠️  El paso queda aprobado pero NO subido: arregla el push y lanza `python3 tools/git_repo.py sync "
-              f"--handoff . --message \"{message}\"`.")
-
-
-def pull_git():
-    """Al empezar un paso, trae los cambios del equipo a develop (si el repo está configurado)."""
-    if GIT_CONFIG_FILE.is_file():
-        result = subprocess.run([sys.executable, str(HERE / "git_repo.py"), "pull", "--handoff", str(ROOT)],
-                                capture_output=True, text=True)
-        print(result.stdout.strip() or result.stderr.strip())
-
-
 def cmd_approve(args):
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
-    git_gate(step["id"])
-    if step["id"] == GIT_STEP:
-        verify_git_ready()
-        if args.accept:
-            sys.exit("prep-git no admite --accept: tiene que cumplirse completo.")
     group = group_of(step)
     ids = [s["id"] for s in members(steps, group)] if group and group_mode(state, group) == "complete" else [step["id"]]
     current = status_of(state, step["id"])
@@ -506,7 +445,6 @@ def cmd_approve(args):
                  + (" (si el maquetador acepta los ❌, usa --accept \"motivo\")" if current == CHECK_FAIL else ""))
     for sid in ids:
         set_status(state, sid, APPROVED, note)
-    sync_git(ids)
     nxt = next((s for s in steps if status_of(load_state(), s["id"]) not in SATISFIED), None)
     what = f"grupo «{group}» ({len(ids)} pasos)" if len(ids) > 1 else f"«{step['title']}»"
     print(f"✅ {what} aprobado." + (f" Siguiente paso: {nxt['id']} · {nxt['title']}." if nxt else " Era el último."))
