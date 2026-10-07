@@ -186,9 +186,6 @@ def cmd_sync(args) -> int:
     return 0
 
 
-RESTART_FILES = ("CLAUDE.md", "PROMPT-INICIAL.md")
-
-
 def cmd_pull(args) -> int:
     """Actualiza develop desde el remoto (solo fast-forward; nunca pisa trabajo local)."""
     cfg_path = args.handoff / CONFIG_REL
@@ -208,8 +205,6 @@ def cmd_pull(args) -> int:
         return 0
     changed = run(["git", "diff", "--name-only", before, after], cwd=root).stdout.split()
     print(f"✅ {branch} actualizado ({len(changed)} fichero(s) nuevos del equipo)")
-    if any(Path(f).name in RESTART_FILES for f in changed):
-        print("🔄 Han cambiado CLAUDE.md / PROMPT-INICIAL.md: se recargan al abrir sesión nueva. Cierra y vuelve a abrir Claude Code.")
     return 0
 
 
