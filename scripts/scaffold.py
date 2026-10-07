@@ -3,7 +3,7 @@
 
 Uso:
   scaffold.py --work ./work --entry /ruta/index.html --out ./handoff-tienda \
-              --store "Mi Tienda" --theme-slug mitienda [--ps-version 9] [--base-theme Hummingbird]
+              --store "Mi Tienda" --theme-slug mitienda [--ps-version 9.2.0|9.1.4]
 
 Rellena los placeholders conocidos. Los que dependen del diseño ({{SOURCE_PRIORITY}},
 {{HOW_TO_READ_SOURCE}}, {{PROJECT_DESCRIPTION}}, {{DEMO_CONTENT_NOTE}}) y los huecos
@@ -17,7 +17,8 @@ import sys
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PS_VERSION = "9.2"
+SUPPORTED_PS_VERSIONS = ("9.2.0", "9.1.4")  # solo PrestaShop 9
+DEFAULT_PS_VERSION = SUPPORTED_PS_VERSIONS[0]
 DEFAULT_BASE_THEME = "Hummingbird"
 TEMPLATE_SUFFIX = ".tmpl"
 IGNORED = {".DS_Store"}
@@ -89,8 +90,8 @@ def main():
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--store", required=True)
     ap.add_argument("--theme-slug", required=True)
-    ap.add_argument("--ps-version", default=DEFAULT_PS_VERSION)
-    ap.add_argument("--base-theme", default=DEFAULT_BASE_THEME)
+    ap.add_argument("--ps-version", default=DEFAULT_PS_VERSION, choices=SUPPORTED_PS_VERSIONS,
+                    help="versión de PrestaShop 9 (la skill no soporta 8.x ni 1.7)")
     ap.add_argument("--demo-data", choices=["yes", "no"], default="no",
                     help="incluir la creación de datos demo (categorías, productos…). Pregúntalo al usuario.")
     args = ap.parse_args()
@@ -99,7 +100,7 @@ def main():
 
     values = {
         "STORE": args.store, "THEME_SLUG": args.theme_slug, "PS_VERSION": args.ps_version,
-        "BASE_THEME": args.base_theme, "HANDOFF_DIR": args.out.name,
+        "BASE_THEME": DEFAULT_BASE_THEME, "HANDOFF_DIR": args.out.name,
         "MAIN_ENTRY": f"{args.out.name}/design/source/{args.entry.name}",
         "DEMO_DATA_NOTE": DEMO_NOTES[args.demo_data],
     }
