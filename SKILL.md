@@ -20,16 +20,20 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 
 Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
+## Cómo se preguntan las entradas: SIEMPRE con el selector de preguntas (AskUserQuestion)
+Todas las preguntas iniciales se hacen con la herramienta **AskUserQuestion** (opciones seleccionables, con «Other» para texto libre), **nunca como una lista de preguntas en texto** que deja la sesión parada esperando. Pon la opción recomendada primero. Mientras el usuario responde, lo que no dependa de sus respuestas (traer el zip, analizar imágenes, lanzar `analyze.py`) ya está corriendo en segundo plano.
+
 ## Arranque: lo primero es el repo, y se pregunta SOLO el repo
-Al empezar, tu primer mensaje al usuario pide **únicamente** la URL del repo git privado (lo crea él; tú no). **No metas en ese mensaje ninguna otra pregunta** (tienda, tema, versión, datos demo, brief): esas vienen después. Compruébala en el acto con `python3 scripts/git_repo.py check-remote <url> --save <work>` (privada y con permiso de escritura):
-- **Vale** → sigue con el flujo normal: entradas que falten, análisis, scaffold… (la URL queda guardada en `<work>/git-remote.json` y el plan arranca con `prep-git`).
-- **No vale** (pública, sin acceso o sin permiso de escritura) → explica el motivo, **para ahí** y pide otra URL o que la corrija. No sigues hasta que dé OK. No es opcional ni se puede saltar.
+El primer AskUserQuestion lleva **una sola pregunta**: la URL del repo git privado (lo crea el usuario; tú no). Opciones: «Ya lo tengo (pego la URL en Other)» y «Aún no lo he creado» (si elige esta, explica cómo crearlo privado en GitHub y vuelve a preguntar). **Ninguna otra pregunta en ese mismo selector.** Compruébala en el acto con `python3 scripts/git_repo.py check-remote <url> --save <work>` (privada y con permiso de escritura):
+- **Vale** → sigue con las demás entradas (siguiente AskUserQuestion) y el flujo normal; la URL queda guardada en `<work>/git-remote.json` y el plan arranca con `prep-git`.
+- **No vale** (pública, sin acceso o sin permiso de escritura) → explica el motivo, **para ahí** y vuelve a preguntar la URL con AskUserQuestion. No sigues hasta que dé OK. No es opcional ni se puede saltar.
 
 ## Entradas que hay que tener (pregunta lo que falte)
 - Ruta del HTML principal y su carpeta de assets.
-- Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
-- Versión de PrestaShop (9 por defecto).
-- Brief o concepto, si existe. Si no existe, no lo inventes.
+- Nombre de la tienda y `theme-slug` (minúsculas, sin espacios). En AskUserQuestion propón el nombre y el slug sacados del HTML o del nombre del zip; el usuario corrige en «Other» con «Nombre | slug».
+- Versión de PrestaShop (9 con Hummingbird por defecto; opción recomendada primero, la otra es 8 con classic).
+- Brief o concepto, si existe (opciones: «No hay brief» / «Lo pego en Other»). Si no existe, no lo inventes.
+- Agrupa estas entradas (tienda+slug, versión, brief, datos demo) en **un solo AskUserQuestion** de hasta 4 preguntas, tras validar el repo.
 - **Pregunta siempre al usuario:** «¿Quieres que el handoff incluya la creación de datos demo (las categorías y los productos de ejemplo del HTML, y si los hay clientes y pedidos)?». Si dice que sí, se pasa `--demo-data yes`. Si no, no se generan.
 
 ## Flujo
