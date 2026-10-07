@@ -18,12 +18,12 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 1. **Todo el CSS en `custom.css`**, nunca estilo en línea ni `<style>` en plantillas.
 2. **Todo texto visible por el sistema de traducciones de PrestaShop** (`{l s='…' d='Shop.Theme.X'}`, `$this->trans()`, y en JS solo cadenas pasadas por `data-*` o `Media::addJsDef`).
 
-Esta skill es **solo para PrestaShop 9**, con tema base **Hummingbird**. Versiones válidas: **9.2.0** (por defecto) y **9.1.4**. No se soporta 8.x ni 1.7.
+Base por defecto: **PrestaShop 9.2.0 + Hummingbird** (9.1.4 también válida). Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
 ## Entradas que hay que tener (pregunta lo que falte)
 - Ruta del HTML principal y su carpeta de assets.
 - Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
-- Versión de PrestaShop: **9.2.0** por defecto; si la instalación del proyecto es **9.1.4**, se usa esa (`inspect_ps.py` la detecta). No hace falta preguntarla.
+- Versión de PrestaShop: **9.2.0** por defecto; **9.1.4** también válida (`inspect_ps.py` detecta la de la instalación). No hace falta preguntarla.
 - Brief o concepto, si existe. Si no existe, no lo inventes.
 - **Pregunta siempre al usuario:** «¿Quieres que el handoff incluya la creación de datos demo (las categorías y los productos de ejemplo del HTML, y si los hay clientes y pedidos)?». Si dice que sí, se pasa `--demo-data yes`. Si no, no se generan.
 
