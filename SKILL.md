@@ -7,9 +7,6 @@ description: Convierte uno o varios HTML de diseño (maqueta estática, SPA con 
 
 Entrada: uno o más HTML de diseño (+ su carpeta de imágenes). Salida: una carpeta `handoff-<tienda>/` (sin zip) que el equipo PrestaShop copia a su instalación y arranca con el `PROMPT-INICIAL.md`.
 
-## Regla de fluidez: el único bloqueante es el repo
-La skill es un **tutorial paso a paso que lo hace todo sola**. **El único bloqueo duro es el repo git privado** (validarlo al arrancar y hacer `prep-git`). Todo lo demás encadena sin pedir permiso para pasar de fase: preguntas iniciales (un solo AskUserQuestion) → analizar → scaffold → redactar → `validate.py` → entregar → modo guiado paso a paso. No termines el turno esperando mientras haya algo que hacer, no dejes trabajo en segundo plano sin esperarlo y **nunca pidas al usuario cerrar, reiniciar o volver a abrir Claude Code ni abrir otra sesión**. Solo te detienes por: (1) el repo, mientras no sea válido; (2) una pregunta real que necesita su respuesta; (3) el OK del maquetador al final de cada paso del modo guiado.
-
 ## Reglas que el handoff siempre impone
 
 - **Nunca se modifica el código de un módulo de terceros (nativo de PrestaShop o de otro autor).** Todo cambio va como override en el tema hijo (`themes/<tema>/modules/<módulo>/…`), con plugins de Smarty del tema, con hooks, con CSS/JS del tema o con la configuración del propio módulo en el Back Office. Solo se edita el código de los módulos que se crean para el proyecto (`jc_*`).
@@ -23,20 +20,11 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 
 Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
-## Cómo se preguntan las entradas: SIEMPRE con el selector de preguntas (AskUserQuestion)
-Todas las preguntas iniciales se hacen con la herramienta **AskUserQuestion** (opciones seleccionables, con «Other» para texto libre), **nunca como una lista de preguntas en texto** que deja la sesión parada esperando. Pon la opción recomendada primero. El análisis (`analyze.py`, `assets.py`) se ejecuta **en primer plano**, como un paso normal del flujo, y se espera a que termine antes de seguir; no lo lances en segundo plano ni con monitores y no dejes la sesión «esperando» mientras el usuario mira. Si la herramienta corta por tiempo, relanza por tandas de rutas (`--routes`) y vuelve a ejecutarlo hasta completarlo.
-
-## Arranque: lo primero es el repo, y se pregunta SOLO el repo
-El primer AskUserQuestion lleva **una sola pregunta**: la URL del repo git privado (lo crea el usuario; tú no). Opciones: «Ya lo tengo (pego la URL en Other)» y «Aún no lo he creado» (si elige esta, explica cómo crearlo privado en GitHub y vuelve a preguntar). **Ninguna otra pregunta en ese mismo selector.** Compruébala en el acto con `python3 scripts/git_repo.py check-remote <url> --save <work>` (privada y con permiso de escritura):
-- **Vale** → sigue con las demás entradas (siguiente AskUserQuestion) y el flujo normal; la URL queda guardada en `<work>/git-remote.json` y el plan arranca con `prep-git`.
-- **No vale** (pública, sin acceso o sin permiso de escritura) → explica el motivo, **para ahí** y vuelve a preguntar la URL con AskUserQuestion. No sigues hasta que dé OK. No es opcional ni se puede saltar.
-
 ## Entradas que hay que tener (pregunta lo que falte)
 - Ruta del HTML principal y su carpeta de assets.
-- Nombre de la tienda y `theme-slug` (minúsculas, sin espacios). En AskUserQuestion propón el nombre y el slug sacados del HTML o del nombre del zip; el usuario corrige en «Other» con «Nombre | slug».
-- Versión de PrestaShop (9 con Hummingbird por defecto; opción recomendada primero, la otra es 8 con classic).
-- Brief o concepto, si existe (opciones: «No hay brief» / «Lo pego en Other»). Si no existe, no lo inventes.
-- Agrupa estas entradas (tienda+slug, versión, brief, datos demo) en **un solo AskUserQuestion** de hasta 4 preguntas, tras validar el repo.
+- Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
+- Versión de PrestaShop (9 por defecto).
+- Brief o concepto, si existe. Si no existe, no lo inventes.
 - **Pregunta siempre al usuario:** «¿Quieres que el handoff incluya la creación de datos demo (las categorías y los productos de ejemplo del HTML, y si los hay clientes y pedidos)?». Si dice que sí, se pasa `--demo-data yes`. Si no, no se generan.
 
 ## Flujo
@@ -75,17 +63,11 @@ El primer AskUserQuestion lleva **una sola pregunta**: la URL del repo git priva
    - Estilos en línea del diseño (`inline-styles.json`): no se copian; se describen como clases en `docs/02`.
 4. **Validar**: `python3 scripts/validate.py <handoff-tienda>`. Corrige hasta que diga OK.
 5. **Entregar**: el handoff queda como **carpeta** (sin zip) dentro del proyecto donde el equipo va a maquetar. Resumen breve al usuario y su visto bueno. Si la carpeta se copia entre equipos, que no lleve `.DS_Store`.
-6. **Continuar en esta misma sesión, sin parar.** Tras `validate.py` en OK y el resumen, **no termines el turno ni mandes al usuario a abrir otra sesión o pegar `PROMPT-INICIAL.md`** (ese fichero es solo para un equipo que recoja el handoff en otra sesión). Haz esto:
-   - Si el handoff no está dentro del proyecto PrestaShop donde se va a maquetar, pregunta una vez con AskUserQuestion dónde ponerlo (por defecto, dentro de ese proyecto) y cópialo.
-   - Ejecuta `python3 tools/steps.py next` desde el handoff y di al usuario cuántos pasos hay y por cuál empiezas («Son N pasos; empezamos por `prep-git`»).
-   - Sigue el modo guiado: haz el paso, comprueba, enseña qué revisar y espera su OK (con AskUserQuestion) antes de aprobar y pasar al siguiente. Entre pasos no te paras a pedir permiso: tras su OK, aprueba, anuncia el siguiente («paso X de N») y empieza.
 
 ## Modo guiado: maquetar paso a paso
 El handoff trae `tools/steps.py` y `tools/compare.py`, así que el equipo no necesita la skill para maquetar. El protocolo está en el `CLAUDE.md` del handoff: Claude anuncia cada paso («empezamos por el pre-header»), lo maqueta, lanza la comprobación, dice al maquetador qué revisar y **espera su OK** antes de aprobarlo y pasar al siguiente (header, footer, páginas y secciones…). Nunca se avanza ni se aprueba sin el OK explícito.
 
 ## Orden de trabajo del equipo
-**Paso 0 del plan (`prep-git`): repo git privado. La URL ya se pidió y se comprobó al arrancar (sección «Arranque»); aquí se vuelve a comprobar y se hace el `setup`. Es el primer paso del plan y el único que bloquea: hasta cumplirlo no se empieza el siguiente. NO es opcional: si el usuario no da la URL de un repo privado donde pueda escribir, el proceso se queda en espera y no avanza (nunca se ofrece saltarlo ni aplazarlo).** Pide la URL del repo (lo crea el usuario, la skill no). `tools/git_repo.py check-remote` exige que sea privado y que el usuario pueda escribir; `setup` escribe el `.gitignore` (sin credenciales de BD ni datos de la tienda), audita secretos, crea las ramas principal y `develop` si faltan y guarda `validation/git.json`. Ramas fijas: `main` y `develop` (nunca `master`). Desde ahí, `next` y `start` empiezan con un `git pull --ff-only` de `develop` (traen los cambios del equipo sin reiniciar nada) y cada `approve` hace commit y push a `develop`. `validate.py` exige que `prep-git` sea el primer paso.
-
 **Fase 0, antes de maquetar nada:** tipos de imagen, páginas CMS y logo, y datos demo si se pidieron. Solo entonces empieza la validación página a página.
 
 ## Después del handoff: validación página a página
@@ -95,14 +77,8 @@ python3 scripts/compare.py --handoff <handoff-tienda> --route <ruta> --url <url-
 ```
 Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automáticas (sin estilo en línea, `custom.css` el último, un H1, alt, objetivos táctiles) y escribe el informe y el estado. Se puede validar también **elemento por elemento** (un componente suelto antes de montar la página): añade `--element <nombre> --design-selector "<css>" --live-selector "<css>"`. La revisión humana (textos traducidos, interacciones, fidelidad) sigue siendo obligatoria.
 
-## Rigor en cada paso: medir y probar antes de pedir el OK
-
-El fallo típico es dar por buena una página porque `check` pasa en verde. La skill obliga a: (1) aserciones `styles` con valores medidos en el diseño en **todos** los pasos de página o sección (al completar `steps.json`, añádelas tú; no dejes pasos solo con criterios en texto); (2) comparar bloque a bloque diseño y web real con Playwright (posiciones, alturas, huecos) además de mirar las capturas; (3) sacar de los datos reales lo que cambia por producto; (4) probar las interacciones de verdad (variantes, cantidad y límite de stock, cesta, favorito, miniaturas) con varios productos. La lista completa está en el `CLAUDE.md` del handoff, apartado «Antes de pedir el OK».
-
 ## Cosas que no hay que hacer
-- No saltar ni aplazar `prep-git`: sin repo git privado no se empieza ningún otro paso (`steps.py` lo bloquea; `approve` vuelve a comprobar privacidad, permiso de escritura y ramas).
 - No inventar concepto, marca ni funcionalidades que el diseño no muestre.
-- No subir nunca credenciales ni usar un repo público para el proyecto (`git_repo.py` lo impide).
 - No incluir material de clientes ni credenciales en la skill. Esta skill es pública; los handoffs generados se guardan fuera del repositorio.
 - No redondear valores del diseño.
 - No dar el handoff por bueno sin haber pasado `validate.py`.
