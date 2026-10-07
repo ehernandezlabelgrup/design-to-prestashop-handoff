@@ -21,7 +21,7 @@ Catálogo de partida para `docs/04-plan-prestashop.md`. Son hipótesis: se valid
 | Textos de interfaz | Siempre traducciones: `{l s='…' d='Shop.Theme.X'}` o `trans()` |
 | Estilos | Siempre `assets/css/custom.css`, sin estilo en línea |
 
-Base: Hummingbird (PS 9). Para 8.x, tema `classic` y sus plantillas equivalentes.
+Base: Hummingbird (PrestaShop 9.2.0 o 9.1.4).
 
 ## `custom.css` en PrestaShop 9.2
 Verificado en una instalación 9.2.0 (solo lectura): **lo carga el core**, no Hummingbird. `FrontController::setMedia()` lo registra con prioridad 1000 (`theme.css` va con 50), buscándolo primero en el tema hijo y luego en el padre, y solo si el fichero existe. Hummingbird no trae ninguno, así que basta con crear `themes/<tema>/assets/css/custom.css`. No hace falta tocar `theme.yml` ni registrarlo otra vez. Revísalo igualmente en la instalación del proyecto, porque puede cambiar entre versiones.
