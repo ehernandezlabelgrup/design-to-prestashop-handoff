@@ -21,7 +21,6 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
 ## Entradas que hay que tener (pregunta lo que falte)
-- **PRIMERO DE TODO, antes de cualquier otra pregunta y antes de analizar nada: la URL del repo git privado** (lo crea el usuario; tú no). Compruébala en el acto con `python3 scripts/git_repo.py check-remote <url> --save <work>` (así queda guardada en disco en `<work>/git-remote.json` y no se pierde si la sesión se compacta o se reinicia; `scaffold.py` la lee de ahí y la vuelve a comprobar): tiene que ser privada y con permiso de escritura. Si falla (pública, sin acceso o sin permiso de escritura), explica el motivo, pide otra URL o que lo corrija, y **no sigas con las demás preguntas ni con el análisis** hasta que dé OK. No es opcional.
 - Ruta del HTML principal y su carpeta de assets.
 - Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
 - Versión de PrestaShop (9 por defecto).
@@ -45,7 +44,7 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
    **Datos demo (solo si el usuario dijo que sí):** `python3 scripts/find_demo_data.py --entry <index.html> --out <work>` vuelca las variables globales con datos (`demo-candidates.json`). Si el diseño no las expone (const/let), lee el fuente.
 2. **Montar el paquete**:
    ```
-   python3 scripts/scaffold.py --work <work> --entry <index.html> --out <handoff-tienda> --git-remote <url-del-repo> --store "<Tienda>" --theme-slug <slug> [--demo-data yes]
+   python3 scripts/scaffold.py --work <work> --entry <index.html> --out <handoff-tienda> --store "<Tienda>" --theme-slug <slug> [--demo-data yes]
    ```
 3. **Redactar** (aquí va el juicio del modelo). Rellena todos los huecos `{{…}}` y `<!-- MODEL: … -->`:
    - `tokens.css`: nombres semánticos; cada hex y cada px tiene que salir de `raw-tokens.json`. Si el diseño usa estilos en línea o no tiene variables, deduce los tokens de los valores más frecuentes y avisa. Anota las discrepancias entre el código y lo que describan los docs.
@@ -69,7 +68,7 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
 El handoff trae `tools/steps.py` y `tools/compare.py`, así que el equipo no necesita la skill para maquetar. El protocolo está en el `CLAUDE.md` del handoff: Claude anuncia cada paso («empezamos por el pre-header»), lo maqueta, lanza la comprobación, dice al maquetador qué revisar y **espera su OK** antes de aprobarlo y pasar al siguiente (header, footer, páginas y secciones…). Nunca se avanza ni se aprueba sin el OK explícito.
 
 ## Orden de trabajo del equipo
-**Paso 0, antes que nada: repo git privado. NO es opcional: si el usuario no da la URL de un repo privado donde pueda escribir, el proceso se queda en espera y no avanza (nunca se ofrece saltarlo ni aplazarlo).** Pide la URL del repo (lo crea el usuario, la skill no). `tools/git_repo.py check-remote` exige que sea privado y que el usuario pueda escribir; `setup` escribe el `.gitignore` (sin credenciales de BD ni datos de la tienda), audita secretos, crea las ramas principal y `develop` si faltan y guarda `validation/git.json`. Ramas fijas: `main` y `develop` (nunca `master`). Desde ahí, `next` y `start` empiezan con un `git pull --ff-only` de `develop` (traen los cambios del equipo, sin reiniciar la sesión; solo si cambian `CLAUDE.md` o `PROMPT-INICIAL.md` avisa de reabrir) y cada `approve` hace commit y push a `develop`. `validate.py` exige que `prep-git` sea el primer paso.
+**Paso 0 del plan (`prep-git`): repo git privado. El análisis y el scaffold arrancan igual que siempre, SIN pedir el repo antes; es el primer paso del plan ya montado, donde se pide la URL y el proceso se queda en espera hasta tenerla. NO es opcional: si el usuario no da la URL de un repo privado donde pueda escribir, el proceso se queda en espera y no avanza (nunca se ofrece saltarlo ni aplazarlo).** Pide la URL del repo (lo crea el usuario, la skill no). `tools/git_repo.py check-remote` exige que sea privado y que el usuario pueda escribir; `setup` escribe el `.gitignore` (sin credenciales de BD ni datos de la tienda), audita secretos, crea las ramas principal y `develop` si faltan y guarda `validation/git.json`. Ramas fijas: `main` y `develop` (nunca `master`). Desde ahí, `next` y `start` empiezan con un `git pull --ff-only` de `develop` (traen los cambios del equipo, sin reiniciar la sesión; solo si cambian `CLAUDE.md` o `PROMPT-INICIAL.md` avisa de reabrir) y cada `approve` hace commit y push a `develop`. `validate.py` exige que `prep-git` sea el primer paso.
 
 **Fase 0, antes de maquetar nada:** tipos de imagen, páginas CMS y logo, y datos demo si se pidieron. Solo entonces empieza la validación página a página.
 
