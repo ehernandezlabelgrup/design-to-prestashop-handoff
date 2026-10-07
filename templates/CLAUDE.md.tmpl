@@ -46,6 +46,16 @@ La maquetación va **un paso cada vez**, guiando al maquetador. El plan de pasos
 4. Dile al maquetador qué revisar (URL, escritorio y móvil, criterios del paso) y **espera su OK**. Mientras no responda, no hagas nada más.
 5. Si pide cambios, se corrigen dentro del mismo paso y se vuelve a comprobar.
 6. Solo con su OK explícito: `python3 tools/steps.py approve <id>`. Entonces propón el siguiente paso y vuelve al punto 1.
+### Antes de pedir el OK: revisión al detalle (obligatorio en cada paso de página o sección)
+Que `check` no marque ❌ **no basta**: un paso sin aserciones medidas pasa en verde aunque se vea distinto del diseño.
+1. **Mide el diseño y la web real con Playwright** (posición y alto de cada bloque, tamaños de letra, alturas de control, bordes, huecos entre bloques) y compáralos número a número. Un hueco de más o de menos de 8 px ya es una diferencia.
+2. **Cada paso lleva `checkProfile: "styles"` con aserciones sacadas del diseño** (título, precio, controles, bordes, sombras, huecos). Si el paso del plan no las trae, se añaden en `design/steps.json` **antes** de maquetar, no después.
+3. **Mira las dos capturas lado a lado** (escritorio y móvil), no solo el porcentaje de píxeles: miniaturas, bordes, estados (elegido/hover/foco/agotado), cantidad de elementos (p. ej. 4 relacionados, no 1) y el texto exacto (singular/plural, unidades).
+4. **Los datos que cambian por producto salen de los datos reales**, nunca de un texto fijo en la plantilla (plazo de envío, familia, edición, formato). Comprueba con 2 o 3 productos distintos (uno con variantes, uno agotado).
+5. **Prueba la interacción de verdad, no solo que se vea**: cambiar variante, cantidad (también por encima del stock máximo y en el límite), añadir a la cesta, favorito como invitado y con sesión, miniaturas, acordeones. Espera a que responda el servidor antes de leer el resultado. Si la plantilla de un bloque se vuelve a pintar por AJAX (ficha: `.add`, `#product-availability`, `.js-product-prices`), conserva esos contenedores o el bloque se queda sin actualizar.
+6. **Los estados nativos que el diseño no dibuja** (aviso de stock, «Añadido a tu carrito», errores) también se revisan y se anotan en `validation/decisiones.md`.
+7. Al presentar el paso, enumera **qué se ha medido, qué se ha probado y qué se ha desviado del diseño** (con motivo). No digas «listo» sin esa lista.
+
 Orden: fase 0 de preparación → **bases de CSS** (tokens, fuentes, botones, formularios, etiquetas, layout) → elementos globales (pre-header, header, footer) → páginas, divididas en secciones (`docs/09-plan-por-pasos.md`). Todo va por elementos. Nunca se aprueba un paso por tu cuenta ni se salta el orden.
 
 ## Antes de escribir código
@@ -59,6 +69,7 @@ Orden: fase 0 de preparación → **bases de CSS** (tokens, fuentes, botones, fo
 
 ## Fase 0 · Preparación (antes de maquetar nada)
 Hasta que esta fase esté cerrada en `validation/progreso.md`, no se maqueta ninguna página.
+0. **Repositorio git privado (primer paso, antes de tocar nada).** Pide al usuario la URL del repo; **no lo crees tú**. Ejecuta `python3 tools/git_repo.py check-remote <url>` (tiene que ser **privado** y el usuario debe poder **escribir**) y después `setup` (`.gitignore` sin credenciales, auditoría, ramas principal y `develop` creadas si faltan). Se sube **todo PrestaShop menos** `app/config/parameters.php`, `.env`, caché, logs, sesiones, imágenes de producto y volcados SQL. A partir de ahí, **cada paso aprobado se sube a `develop`** (lo hace `steps.py approve`). Ramas: solo `main` y `develop`. Al empezar cada paso `steps.py` hace `git pull --ff-only` de `develop`; si avisa de que cambió `CLAUDE.md`, pide al usuario reabrir la sesión. Nunca subas a un repo público ni fuerces el push.
 1. **Tipos de imagen** de PrestaShop, según `docs/07-ajustes-imagenes.md`. No se escriben tamaños a mano en las plantillas: se usan los tipos con `srcset`.
 2. **Páginas CMS** legales y de contenido y **logo**, según `docs/04-plan-prestashop.md`.
 3. **Datos demo.** {{DEMO_DATA_NOTE}}
