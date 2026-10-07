@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PS_VERSION = "9"
+DEFAULT_PS_VERSION = "9.2"
 DEFAULT_BASE_THEME = "Hummingbird"
 TEMPLATE_SUFFIX = ".tmpl"
 IGNORED = {".DS_Store"}

@@ -39,8 +39,8 @@ foreach (array_filter(array_map('trim', explode(',', $opts['countries']))) as $i
     }
     $country->save();
 
-    $formatId = (int) $db->getValue('SELECT id_address_format FROM ' . _DB_PREFIX_ . 'address_format WHERE id_country = ' . $id);
-    $format = new AddressFormat($formatId ?: null);
+    // PrestaShop 9: la tabla address_format usa id_country como clave (no existe id_address_format)
+    $format = new AddressFormat($id);
     $text = (string) $format->format;
     if ($text !== '' && strpos($text, 'State:name') === false) {
         $lines = preg_split('/\R/', $text);
