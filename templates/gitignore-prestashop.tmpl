@@ -1,0 +1,61 @@
+# .gitignore de PrestaShop para el repo que se entrega al equipo.
+# Regla: se sube la instalación completa SIN credenciales ni datos de la tienda.
+# Si dudas de un fichero, no lo subas: `python3 tools/git_repo.py audit` lo revisa.
+
+# --- Credenciales y configuración local (BD, claves, cookies) ---
+/app/config/parameters.php
+/app/config/parameters.yml
+/config/settings.inc.php
+/config/defines_custom.inc.php
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+auth.json
+.claude/settings.local.json
+
+# --- Caché, logs y sesiones (se regeneran) ---
+/var/cache/
+/var/logs/
+/var/sessions/
+/var/log/
+/cache/smarty/cache/
+/cache/smarty/compile/
+/cache/cachefs/
+/cache/purifier/
+
+# --- Contenido de la tienda en ejecución (no es código) ---
+/img/p/
+/img/tmp/
+/img/c/
+/img/m/
+/img/su/
+/img/os/
+/upload/
+/download/
+/themes/*/cache/
+/translations/*/*.zip
+
+# --- Volcados y copias de seguridad (llevan datos y a veces credenciales) ---
+*.sql
+*.sql.gz
+*.dump
+*.bak
+*.zip
+*.tar
+*.tar.gz
+/backups/
+/admin*/backups/
+/admin*/autoupgrade/
+
+# --- Dependencias de front del tema hijo ---
+node_modules/
+
+# --- Ruido de sistema y editores ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

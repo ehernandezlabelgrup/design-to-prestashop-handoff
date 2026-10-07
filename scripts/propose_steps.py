@@ -22,6 +22,18 @@ def slug(route: str) -> str:
 
 def prep_steps(with_demo: bool) -> list:
     steps = [
+        {"id": "prep-git", "title": "Repositorio git privado", "kind": "prep", "dependsOn": [],
+         "summary": "ANTES de nada: pedir al usuario la URL del repo git (lo crea él; la skill NO lo crea) y comprobar con "
+                    "python3 tools/git_repo.py check-remote <url> que es PRIVADO y que el usuario tiene permiso de ESCRITURA. "
+                    "Luego python3 tools/git_repo.py setup --ps-root <ruta-prestashop> --remote <url> --handoff . : escribe el .gitignore "
+                    "(sin parameters.php, .env, caché, logs, sesiones, imágenes de producto, volcados SQL…), audita que no entren credenciales, "
+                    "crea las ramas principal y develop si faltan (en local y en el remoto) y guarda validation/git.json. "
+                    "Desde ese momento, cada `steps.py approve` hace commit y push a develop.",
+         "docs": ["docs/00-reglas-equipo.md"],
+         "acceptance": ["El remoto es privado y el usuario puede escribir (check-remote en verde)",
+                        "Existen en el remoto la rama principal y develop",
+                        "git_repo.py audit no encuentra credenciales y .gitignore excluye parameters.php, .env, var/cache y volcados SQL",
+                        "Existe validation/git.json (a partir de aquí cada paso aprobado se sube a develop)"]},
         {"id": "prep-inventario", "title": "Inventario inicial de la tienda", "kind": "prep", "dependsOn": [],
          "summary": "ANTES de tocar nada: sudo -u www-data php scripts/ps_inventory.php --ps-root=… --theme=… --out=/tmp/inicial.json --own-prefix=… y copiarlo a "
                     "design/inventario-inicial.json. Sirve para que el README de entrega diga qué módulos se instalaron o activaron y qué configuración cambió. "

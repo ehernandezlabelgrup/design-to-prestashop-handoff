@@ -198,6 +198,7 @@ def resolve_target(steps: list, state: dict, step: dict):
 
 
 def cmd_next(args):
+    pull_git()
     steps, state = load_steps(), load_state()
     for step in steps:
         if status_of(state, step["id"]) in SATISFIED:
@@ -216,6 +217,7 @@ def cmd_next(args):
 
 
 def cmd_start(args):
+    pull_git()
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
     target = resolve_target(steps, state, step)
@@ -430,6 +432,30 @@ def cmd_check(args):
                            else "corrige los ❌ y vuelve a ejecutar check."))
 
 
+GIT_CONFIG_FILE = ROOT / "validation" / "git.json"
+
+
+def sync_git(step_ids: list):
+    """Con el repo configurado (prep-git), cada paso aprobado se sube a develop."""
+    if not GIT_CONFIG_FILE.is_file():
+        return
+    message = f"feat: validate step {', '.join(step_ids)}"
+    result = subprocess.run([sys.executable, str(HERE / "git_repo.py"), "sync", "--handoff", str(ROOT),
+                             "--message", message], capture_output=True, text=True)
+    print(result.stdout.strip() or result.stderr.strip())
+    if result.returncode != 0:
+        print("⚠️  El paso queda aprobado pero NO subido: arregla el push y lanza `python3 tools/git_repo.py sync "
+              f"--handoff . --message \"{message}\"`.")
+
+
+def pull_git():
+    """Al empezar un paso, trae los cambios del equipo a develop (si el repo está configurado)."""
+    if GIT_CONFIG_FILE.is_file():
+        result = subprocess.run([sys.executable, str(HERE / "git_repo.py"), "pull", "--handoff", str(ROOT)],
+                                capture_output=True, text=True)
+        print(result.stdout.strip() or result.stderr.strip())
+
+
 def cmd_approve(args):
     steps, state = load_steps(), load_state()
     step = find(steps, args.id)
@@ -445,6 +471,7 @@ def cmd_approve(args):
                  + (" (si el maquetador acepta los ❌, usa --accept \"motivo\")" if current == CHECK_FAIL else ""))
     for sid in ids:
         set_status(state, sid, APPROVED, note)
+    sync_git(ids)
     nxt = next((s for s in steps if status_of(load_state(), s["id"]) not in SATISFIED), None)
     what = f"grupo «{group}» ({len(ids)} pasos)" if len(ids) > 1 else f"«{step['title']}»"
     print(f"✅ {what} aprobado." + (f" Siguiente paso: {nxt['id']} · {nxt['title']}." if nxt else " Era el último."))

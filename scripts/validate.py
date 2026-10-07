@@ -125,6 +125,8 @@ def check_steps(root: Path, errors: list):
         return
     steps = json.loads(path.read_text(encoding="utf-8")).get("steps", [])
     ids = [s["id"] for s in steps]
+    if not ids or ids[0] != "prep-git":
+        errors.append("steps.json: el primer paso tiene que ser prep-git (repositorio git privado)")
     errors.extend(f"steps.json: id repetido {i}" for i in sorted({i for i in ids if ids.count(i) > 1}))
     for step in steps:
         label = f"steps.json[{step['id']}]"

@@ -68,6 +68,8 @@ Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version
 El handoff trae `tools/steps.py` y `tools/compare.py`, así que el equipo no necesita la skill para maquetar. El protocolo está en el `CLAUDE.md` del handoff: Claude anuncia cada paso («empezamos por el pre-header»), lo maqueta, lanza la comprobación, dice al maquetador qué revisar y **espera su OK** antes de aprobarlo y pasar al siguiente (header, footer, páginas y secciones…). Nunca se avanza ni se aprueba sin el OK explícito.
 
 ## Orden de trabajo del equipo
+**Paso 0, antes que nada: repo git privado.** Pide la URL del repo (lo crea el usuario, la skill no). `tools/git_repo.py check-remote` exige que sea privado y que el usuario pueda escribir; `setup` escribe el `.gitignore` (sin credenciales de BD ni datos de la tienda), audita secretos, crea las ramas principal y `develop` si faltan y guarda `validation/git.json`. Ramas fijas: `main` y `develop` (nunca `master`). Desde ahí, `next` y `start` empiezan con un `git pull --ff-only` de `develop` (traen los cambios del equipo, sin reiniciar la sesión; solo si cambian `CLAUDE.md` o `PROMPT-INICIAL.md` avisa de reabrir) y cada `approve` hace commit y push a `develop`. `validate.py` exige que `prep-git` sea el primer paso.
+
 **Fase 0, antes de maquetar nada:** tipos de imagen, páginas CMS y logo, y datos demo si se pidieron. Solo entonces empieza la validación página a página.
 
 ## Después del handoff: validación página a página
@@ -77,8 +79,13 @@ python3 scripts/compare.py --handoff <handoff-tienda> --route <ruta> --url <url-
 ```
 Compara con el render del diseño en 1440 y 390 px, comprueba las reglas automáticas (sin estilo en línea, `custom.css` el último, un H1, alt, objetivos táctiles) y escribe el informe y el estado. Se puede validar también **elemento por elemento** (un componente suelto antes de montar la página): añade `--element <nombre> --design-selector "<css>" --live-selector "<css>"`. La revisión humana (textos traducidos, interacciones, fidelidad) sigue siendo obligatoria.
 
+## Rigor en cada paso: medir y probar antes de pedir el OK
+
+El fallo típico es dar por buena una página porque `check` pasa en verde. La skill obliga a: (1) aserciones `styles` con valores medidos en el diseño en **todos** los pasos de página o sección (al completar `steps.json`, añádelas tú; no dejes pasos solo con criterios en texto); (2) comparar bloque a bloque diseño y web real con Playwright (posiciones, alturas, huecos) además de mirar las capturas; (3) sacar de los datos reales lo que cambia por producto; (4) probar las interacciones de verdad (variantes, cantidad y límite de stock, cesta, favorito, miniaturas) con varios productos. La lista completa está en el `CLAUDE.md` del handoff, apartado «Antes de pedir el OK».
+
 ## Cosas que no hay que hacer
 - No inventar concepto, marca ni funcionalidades que el diseño no muestre.
+- No subir nunca credenciales ni usar un repo público para el proyecto (`git_repo.py` lo impide).
 - No incluir material de clientes ni credenciales en la skill. Esta skill es pública; los handoffs generados se guardan fuera del repositorio.
 - No redondear valores del diseño.
 - No dar el handoff por bueno sin haber pasado `validate.py`.
