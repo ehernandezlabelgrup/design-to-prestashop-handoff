@@ -20,6 +20,11 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 
 Base por defecto: **PrestaShop 9 + Hummingbird**. Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
+## Arranque: lo primero es el repo, y se pregunta SOLO el repo
+Al empezar, tu primer mensaje al usuario pide **únicamente** la URL del repo git privado (lo crea él; tú no). **No metas en ese mensaje ninguna otra pregunta** (tienda, tema, versión, datos demo, brief): esas vienen después. Compruébala en el acto con `python3 scripts/git_repo.py check-remote <url> --save <work>` (privada y con permiso de escritura):
+- **Vale** → sigue con el flujo normal: entradas que falten, análisis, scaffold… (la URL queda guardada en `<work>/git-remote.json` y el plan arranca con `prep-git`).
+- **No vale** (pública, sin acceso o sin permiso de escritura) → explica el motivo, **para ahí** y pide otra URL o que la corrija. No sigues hasta que dé OK. No es opcional ni se puede saltar.
+
 ## Entradas que hay que tener (pregunta lo que falte)
 - Ruta del HTML principal y su carpeta de assets.
 - Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
