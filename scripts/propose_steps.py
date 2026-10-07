@@ -23,7 +23,7 @@ def slug(route: str) -> str:
 def prep_steps(with_demo: bool) -> list:
     steps = [
         {"id": "prep-git", "title": "Repositorio git privado", "kind": "prep", "dependsOn": [],
-         "summary": "La URL del repo ya se pidió y comprobó al empezar (design/git-remote.json; la crea el usuario, la skill NO). Volver a comprobarla con "
+         "summary": "Pedir al usuario la URL del repo (la crea él, la skill NO; si ya hay design/git-remote.json, usarla). Comprobarla con "
                     "python3 tools/git_repo.py check-remote <url>: PRIVADO y permiso de ESCRITURA. "
                     "Luego python3 tools/git_repo.py setup --ps-root <ruta-prestashop> --remote <url> --handoff . : escribe el .gitignore "
                     "(sin parameters.php, .env, caché, logs, sesiones, imágenes de producto, volcados SQL…), audita que no entren credenciales, "
