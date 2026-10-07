@@ -42,3 +42,7 @@ El diseño casi nunca incluye los estados nativos de la ficha. El paso de **prod
 - «El aviso se pinta solo con el gancho de ps_emailalerts (sin botones de compartir) y no rompe el JS del módulo»
 
 Si el diseño trae su propio bloque «Avísame», se maqueta tal cual; si no, se monta con los tokens del diseño y se anota en `validation/decisiones.md`.
+
+
+## Obligatorio al completar el plan
+Cada paso de tipo `section` o `page` debe llevar `checkProfile: "styles"` y `assertions` medidas en el diseño (título, precio, controles, bordes, sombras, huecos entre bloques). Un paso solo con `acceptance` en texto no se da por bueno.
