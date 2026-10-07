@@ -216,7 +216,9 @@ def cmd_pull(args) -> int:
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("check-remote").add_argument("url")
+    chk = sub.add_parser("check-remote")
+    chk.add_argument("url")
+    chk.add_argument("--save", type=Path, help="carpeta de trabajo donde guardar la URL (git-remote.json) si es válida")
     sub.add_parser("audit").add_argument("--ps-root", required=True, type=Path)
     st = sub.add_parser("setup")
     st.add_argument("--ps-root", required=True, type=Path)
@@ -230,6 +232,10 @@ def main():
     if args.cmd == "check-remote":
         errors = check_remote(args.url)
         print("\n".join(f"❌ {e}" for e in errors) if errors else "OK · remoto privado y con permiso de escritura.")
+        if not errors and args.save:
+            args.save.mkdir(parents=True, exist_ok=True)
+            (args.save / "git-remote.json").write_text(json.dumps({"remote": args.url}, indent=1), encoding="utf-8")
+            print(f"  · URL guardada en {args.save / 'git-remote.json'}")
         sys.exit(1 if errors else 0)
     sys.exit({"audit": cmd_audit, "setup": cmd_setup, "sync": cmd_sync, "pull": cmd_pull}[args.cmd](args))
 

@@ -83,11 +83,22 @@ def build_steps(work: Path, out: Path, demo: str):
     subprocess.run([sys.executable, str(out / "tools" / "steps.py"), "status"], check=True, stdout=subprocess.DEVNULL)
 
 
+def check_git_remote(url: str):
+    """El repo privado es obligatorio: sin URL válida no se monta el paquete."""
+    sys.path.insert(0, str(SKILL_ROOT / "scripts"))
+    import git_repo
+    errors = git_repo.check_remote(url)
+    if errors:
+        sys.exit("\n".join(f"❌ {e}" for e in errors) + "\nSin un repo git privado donde puedas escribir no se continúa.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--work", required=True, type=Path)
     ap.add_argument("--entry", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
+    ap.add_argument("--git-remote",
+                    help="URL del repo git PRIVADO donde el usuario puede escribir. Si falta, se lee de <work>/git-remote.json (la guarda `git_repo.py check-remote --save <work>`)")
     ap.add_argument("--store", required=True)
     ap.add_argument("--theme-slug", required=True)
     ap.add_argument("--ps-version", default=DEFAULT_PS_VERSION)
@@ -97,6 +108,12 @@ def main():
     args = ap.parse_args()
     if not args.entry.is_file():
         sys.exit(f"No existe el HTML de entrada: {args.entry}")
+    saved = args.work / "git-remote.json"
+    if not args.git_remote and saved.is_file():
+        args.git_remote = json.loads(saved.read_text(encoding="utf-8"))["remote"]
+    if not args.git_remote:
+        sys.exit("Falta el repo git privado: pide la URL al usuario y ejecuta `git_repo.py check-remote <url> --save <work>`.")
+    check_git_remote(args.git_remote)
 
     values = {
         "STORE": args.store, "THEME_SLUG": args.theme_slug, "PS_VERSION": args.ps_version,
@@ -108,6 +125,7 @@ def main():
     copy_templates(args.out, values, args.demo_data == "yes")
     copy_work_files(args.work, args.entry.resolve(), args.out)
     install_tools(args.out)
+    (args.out / "design" / "git-remote.json").write_text(json.dumps({"remote": args.git_remote}, indent=1), encoding="utf-8")
     build_steps(args.work, args.out, args.demo_data)
     print(f"OK · paquete creado en {args.out}. Faltan los huecos del modelo (ver validate.py).")
 
