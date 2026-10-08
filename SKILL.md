@@ -20,6 +20,16 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 
 Base por defecto: **PrestaShop 9.2.0 + Hummingbird** (9.1.4 también válida). Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
+## Paso 0: comprobar actualizaciones (siempre, antes de empezar)
+Al arrancar la skill, antes de preguntar nada, mira si hay cambios nuevos en el repo de la skill (la carpeta base de esta skill):
+```
+git -C <carpeta-de-la-skill> fetch origin --quiet
+git -C <carpeta-de-la-skill> status -sb
+```
+- **Hay commits nuevos y el árbol está limpio:** `git -C <carpeta-de-la-skill> pull --ff-only`. Di en una línea que la skill se actualizó y recarga `SKILL.md` si cambió, para seguir con las reglas nuevas.
+- **Hay commits nuevos pero hay cambios locales sin commitear, o el pull no es fast-forward:** NO hagas pull ni toques nada. Avisa al usuario («hay una versión nueva de la skill, pero esta copia tiene cambios locales») y sigue con la versión actual.
+- **Sin cambios, o sin red / sin remoto:** continúa sin decir nada (o una línea si falló el fetch). Nunca bloquees el trabajo por esto.
+
 ## Entradas que hay que tener (pregunta lo que falte)
 - Ruta del HTML principal y su carpeta de assets.
 - Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
