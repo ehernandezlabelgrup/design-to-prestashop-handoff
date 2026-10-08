@@ -21,12 +21,14 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 Base por defecto: **PrestaShop 9.2.0 + Hummingbird** (9.1.4 también válida). Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
 ## Paso 0: repositorio git privado (obligatorio; sin él no se pasa al paso 1)
-Lo primero de todo, antes de comprobar actualizaciones y antes de preguntar nada más: **pide al usuario la URL de un repositorio git privado** donde vivirá el proyecto y el handoff. Mientras no la dé y se verifique, **no se hace nada más**: ni paso 1, ni análisis, ni scaffold, ni lectura de la tienda.
-- Si el usuario no la trae, pídela y espera. No la inventes, no uses un repositorio por defecto ni sigas «y luego me la das».
-- **Verifícala:** `git ls-remote <url>` tiene que funcionar con las credenciales del usuario. Si la URL es `https`, comprueba además que **no** es pública: `GIT_TERMINAL_PROMPT=0 git -c credential.helper= ls-remote <url>` debe fallar por falta de acceso; si responde sin credenciales, el repositorio es público y se rechaza («tiene que ser privado»). Con `ssh` basta con que `ls-remote` funcione.
-- Si falla la verificación (no existe, sin acceso, público), dilo con el error exacto y vuelve a pedir la URL. No se avanza.
-- Con la URL verificada, el handoff se genera **dentro de un clon de ese repositorio** (no en una carpeta suelta) y se sube a él al entregar. Commits en inglés con formato `<type>: <description>` y sin force push.
-- Anota la URL en el `CLAUDE.md` del handoff, para que cualquiera que lo abra sepa dónde vive.
+Lo primero de todo, antes de comprobar actualizaciones y antes de preguntar nada más: **pide al usuario la URL de un repositorio git privado** donde vivirá el proyecto. Mientras no la dé y se verifique, **no se hace nada más**: ni paso 1, ni análisis, ni scaffold, ni lectura de la tienda. Si no la trae, pídela y espera; no la inventes ni uses una por defecto.
+El repositorio es el de **la tienda entera** (la raíz de PrestaShop), **sin `vendor/` ni los parámetros** (`app/config/parameters.php`, `.env`). Pide también la ruta de la instalación de PrestaShop. Después ejecuta, desde la carpeta de la skill:
+```
+python3 scripts/git_setup.py --ps-root <ruta-prestashop> --url <git-url> --theme-slug <slug>
+```
+Hace, y se detiene en el primer fallo: 1) verifica la URL con `git ls-remote` con las credenciales del usuario y, si es `https`, comprueba que sin credenciales **no** responde (si responde, es público y se rechaza); 2) `git init` en la raíz de PrestaShop si hace falta; 3) escribe el bloque de `.gitignore` (`templates/gitignore.tmpl`: `vendor/`, parámetros, `.env`, caché y contenido generado); 4) crea la rama `handoff/<slug>` (nunca toca `main`), configura `origin` y hace el primer commit local; 5) comprueba que no hay secretos en lo preparado. **No sube nada todavía.** Si falla (URL inexistente, sin acceso, pública, sin `git config user.name`), di el error exacto, vuelve a pedir lo que falte y no avances.
+
+**Cómo se sube el trabajo:** el handoff se genera **dentro** de esa raíz (`--out <ruta-prestashop>/handoff-<slug>`). El primer paso del plan es `prep-git`: enséñale al usuario lo preparado (repositorio privado, qué se ignora, rama, nº de ficheros), **espera su OK** y `tools/steps.py approve prep-git` hace el **primer push**; si el push falla, el paso no se aprueba y no se sigue. Desde ahí, **cada paso aprobado con el OK del usuario hace commit + push** automáticamente (`<type>: approve step <id>`, en inglés, sin force push). Si un push posterior falla, se avisa y el paso queda aprobado en local. Anota la URL y la rama en el `CLAUDE.md` del handoff.
 
 ## Paso 1: comprobar actualizaciones (siempre, justo después del paso 0)
 Con el repositorio verificado, antes de preguntar nada más, mira si hay cambios nuevos en el repo de la skill (la carpeta base de esta skill):
@@ -65,7 +67,7 @@ Todo el handoff lo hace **un único agente, en primer plano**: sin subagentes (`
    **Datos demo (solo si el usuario dijo que sí):** `python3 scripts/find_demo_data.py --entry <index.html> --out <work>` vuelca las variables globales con datos (`demo-candidates.json`). Si el diseño no las expone (const/let), lee el fuente.
 2. **Montar el paquete**:
    ```
-   python3 scripts/scaffold.py --work <work> --entry <index.html> --out <handoff-tienda> --store "<Tienda>" --theme-slug <slug> [--demo-data yes]
+   python3 scripts/scaffold.py --work <work> --entry <index.html> --out <ruta-prestashop>/handoff-<slug> --store "<Tienda>" --theme-slug <slug> [--demo-data yes]
    ```
 3. **Redactar** (aquí va el juicio del modelo). Rellena todos los huecos `{{…}}` y `<!-- MODEL: … -->`:
    - `tokens.css`: nombres semánticos; cada hex y cada px tiene que salir de `raw-tokens.json`. Si el diseño usa estilos en línea o no tiene variables, deduce los tokens de los valores más frecuentes y avisa. Anota las discrepancias entre el código y lo que describan los docs.
@@ -83,7 +85,7 @@ Todo el handoff lo hace **un único agente, en primer plano**: sin subagentes (`
    - `CLAUDE.md`: `SOURCE_PRIORITY` (vista de escritorio > móvil > estados > docs), `HOW_TO_READ_SOURCE` (según el formato del HTML), `PROJECT_DESCRIPTION` y `DEMO_CONTENT_NOTE`.
    - Estilos en línea del diseño (`inline-styles.json`): no se copian; se describen como clases en `docs/02`.
 4. **Validar**: `python3 scripts/validate.py <handoff-tienda>`. Corrige hasta que diga OK.
-5. **Entregar**: el handoff queda como **carpeta** (sin zip) dentro del proyecto donde el equipo va a maquetar. Resumen breve al usuario y su visto bueno. Si la carpeta se copia entre equipos, que no lleve `.DS_Store`.
+5. **Entregar**: el handoff queda como **carpeta** (sin zip) dentro del proyecto donde el equipo va a maquetar, que es el repositorio del paso 0. Resumen breve al usuario y su visto bueno. Si la carpeta se copia entre equipos, que no lleve `.DS_Store`.
 
 ## Modo guiado: maquetar paso a paso
 El handoff trae `tools/steps.py` y `tools/compare.py`, así que el equipo no necesita la skill para maquetar. El protocolo está en el `CLAUDE.md` del handoff: Claude anuncia cada paso («empezamos por el pre-header»), lo maqueta, lanza la comprobación, dice al maquetador qué revisar y **espera su OK** antes de aprobarlo y pasar al siguiente (header, footer, páginas y secciones…). Nunca se avanza ni se aprueba sin el OK explícito.

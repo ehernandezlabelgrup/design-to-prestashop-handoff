@@ -9,7 +9,8 @@ Comandos (desde la raíz del handoff):
   steps.py check <id> --url <url>      ejecuta la comprobación automática contra PrestaShop
   steps.py approve <id> [--accept "motivo"]  da el paso por bueno (solo tras el OK del maquetador);
                                        --accept aprueba un paso con ❌ automáticos que el maquetador acepta
-                                       expresamente (queda anotado el motivo)
+                                       expresamente (queda anotado el motivo). Al aprobar, SUBE al git privado
+                                       lo hecho (commit + push; ver «Git por paso aprobado»)
   steps.py reopen <id>                 vuelve a abrir un paso
   steps.py defer <id> [--reason ...]   aplaza un paso (solo si el maquetador lo pide); no bloquea los siguientes
   steps.py group <grupo> --mode elements|complete   cómo se maqueta una página (ver «Modos»)
@@ -53,6 +54,50 @@ def new_check_page(browser, width=1440, height=900):
     if state and Path(state).is_file():
         return browser.new_context(storage_state=state, viewport={"width": width, "height": height}).new_page()
     return browser.new_page(viewport={"width": width, "height": height})
+
+# ---- Git por paso aprobado -------------------------------------------------------------------------------------
+# El repositorio es el del proyecto (la tienda entera, sin vendor ni parámetros; lo prepara scripts/git_setup.py en el paso 0).
+# Cada paso aprobado = un commit + un push a la rama de trabajo. Nunca force push.
+GIT_STEP_ID = "prep-git"
+FORBIDDEN_IN_REPO = ("app/config/parameters.php", "app/config/parameters.yml", "config/settings.inc.php", ".env")
+COMMIT_TYPES = {"prep": "chore", "final": "chore", "base": "feat", "global": "feat", "section": "feat", "page": "feat"}
+
+
+def run_git(root: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True,
+                          env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
+
+
+def git_root():
+    probe = run_git(ROOT, "rev-parse", "--show-toplevel")
+    return Path(probe.stdout.strip()) if probe.returncode == 0 else None
+
+
+def publish_step(step: dict, ids: list):
+    """Commit + push de lo hecho en el paso. Devuelve (ok, mensaje)."""
+    top = git_root()
+    if top is None:
+        return False, "el handoff no está dentro de un repositorio git (falta el paso 0: scripts/git_setup.py)"
+    if run_git(top, "remote", "get-url", "origin").returncode != 0:
+        return False, "el repositorio no tiene remoto «origin»"
+    run_git(top, "add", "-A")
+    staged = run_git(top, "diff", "--cached", "--name-only").stdout.split("\n")
+    leaked = sorted(f for f in staged if f in FORBIDDEN_IN_REPO or f.startswith("vendor/") or "/vendor/" in f)
+    if leaked:
+        run_git(top, "reset", "-q")
+        return False, "no se sube: habría ido " + ", ".join(leaked[:5]) + " (revisa el .gitignore)"
+    kind = step.get("kind", "page")
+    label = ids[0] if len(ids) == 1 else f"{step.get('route') or ids[0]} ({len(ids)} steps)"
+    if run_git(top, "diff", "--cached", "--quiet").returncode != 0:
+        commit = run_git(top, "commit", "-q", "-m", f"{COMMIT_TYPES.get(kind, 'feat')}: approve step {label}")
+        if commit.returncode != 0:
+            return False, "no se pudo hacer el commit: " + commit.stderr.strip()
+    branch = run_git(top, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    push = run_git(top, "push", "-u", "origin", branch)
+    if push.returncode != 0:
+        return False, "el push falló: " + (push.stderr.strip() or push.stdout.strip())
+    return True, f"subido a origin/{branch}"
+
 
 def load_doc() -> dict:
     if not STEPS_FILE.is_file():
@@ -443,11 +488,21 @@ def cmd_approve(args):
     else:
         sys.exit(f"«{step['id']}» está en estado {current}: ejecuta check antes de aprobar"
                  + (" (si el maquetador acepta los ❌, usa --accept \"motivo\")" if current == CHECK_FAIL else ""))
+    if step["id"] == GIT_STEP_ID:
+        # el paso 0 solo se aprueba si el primer push funciona: sin el repositorio no se sigue
+        pushed, detail = publish_step(step, ids)
+        if not pushed:
+            sys.exit(f"✗ «{step['title']}» NO aprobado: {detail}")
     for sid in ids:
         set_status(state, sid, APPROVED, note)
     nxt = next((s for s in steps if status_of(load_state(), s["id"]) not in SATISFIED), None)
     what = f"grupo «{group}» ({len(ids)} pasos)" if len(ids) > 1 else f"«{step['title']}»"
     print(f"✅ {what} aprobado." + (f" Siguiente paso: {nxt['id']} · {nxt['title']}." if nxt else " Era el último."))
+    if step["id"] != GIT_STEP_ID:
+        pushed, detail = publish_step(step, ids)
+        print(("⬆️  " if pushed else "⚠️  No se pudo subir al git (el paso queda aprobado en local): ") + detail)
+    else:
+        print(f"⬆️  {detail}")
 
 
 def cmd_reopen(args):
