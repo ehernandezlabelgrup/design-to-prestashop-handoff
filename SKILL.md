@@ -30,6 +30,9 @@ git -C <carpeta-de-la-skill> status -sb
 - **Hay commits nuevos pero hay cambios locales sin commitear, o el pull no es fast-forward:** NO hagas pull ni toques nada. Avisa al usuario («hay una versión nueva de la skill, pero esta copia tiene cambios locales») y sigue con la versión actual.
 - **Sin cambios, o sin red / sin remoto:** continúa sin decir nada (o una línea si falló el fetch). Nunca bloquees el trabajo por esto.
 
+## Un solo agente, en primer plano
+Todo el handoff lo hace **un único agente, en primer plano**: sin subagentes (`Agent`), sin workflows ni forks, ni para analizar, ni para redactar los docs, ni para medir los pasos. El usuario tiene que ver cada paso a medida que ocurre. Si el trabajo es largo, se hace secuencialmente y se informa del avance.
+
 ## Entradas que hay que tener (pregunta lo que falte)
 - Ruta del HTML principal y su carpeta de assets.
 - Nombre de la tienda y `theme-slug` (minúsculas, sin espacios).
