@@ -35,6 +35,7 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 
 ## Problemas conocidos de PrestaShop 9.2 (verificados en 9.2.0)
 - La traducción es-ES de «Subcategories for %s» (`ShopThemeCatalog`) trae un `%` sobrante (`Subcategorías de %s%`) y rompe con 500 todas las páginas de categoría (la plantilla de `ps_categorytree` hace `sprintf`). Se corrige con una traducción personalizada (tabla `translation` o Internacional > Traducciones), sin tocar el core.
+- **`prestashop:theme:enable` falla con «Cannot build Language context as no languageId has been defined»** en algunas instalaciones 9.2.0 (`ThemeManager::enable()` construye el contexto de idioma antes de que se fije; `prestashop:module` sí lo fija). No se toca el core: se usa `tools/ps_console.php`, que ejecuta el `bin/console` real con el idioma ya fijado: `sudo -u www-data php /tmp/ps_console.php --ps-root=<ruta> prestashop:theme:enable <tema> --env=prod` (copiarlo antes a una ruta legible por ese usuario).
 - `bin/console cache:clear` con 512 MB de memoria se queda sin ella: `php -d memory_limit=-1 bin/console cache:clear`.
 - El CMS elimina `<details>` y `<summary>` al guardar.
 - Si el dominio de la tienda no coincide con el de la URL que abres, PrestaShop redirige a la home y pierde la ruta.
