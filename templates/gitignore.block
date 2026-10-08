@@ -14,6 +14,7 @@ node_modules/
 /var/
 /cache/
 /themes/*/cache/
+/themes/*/assets/cache/
 /translations/cache/
 /img/tmp/
 /log/
