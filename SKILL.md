@@ -20,8 +20,16 @@ Están en `templates/docs/00-reglas-equipo.md.tmpl`. Las dos que más se rompen:
 
 Base por defecto: **PrestaShop 9.2.0 + Hummingbird** (9.1.4 también válida). Para 8.x se pasa `--ps-version 8 --base-theme classic`.
 
-## Paso 0: comprobar actualizaciones (siempre, antes de empezar)
-Al arrancar la skill, antes de preguntar nada, mira si hay cambios nuevos en el repo de la skill (la carpeta base de esta skill):
+## Paso 0: repositorio git privado (obligatorio; sin él no se pasa al paso 1)
+Lo primero de todo, antes de comprobar actualizaciones y antes de preguntar nada más: **pide al usuario la URL de un repositorio git privado** donde vivirá el proyecto y el handoff. Mientras no la dé y se verifique, **no se hace nada más**: ni paso 1, ni análisis, ni scaffold, ni lectura de la tienda.
+- Si el usuario no la trae, pídela y espera. No la inventes, no uses un repositorio por defecto ni sigas «y luego me la das».
+- **Verifícala:** `git ls-remote <url>` tiene que funcionar con las credenciales del usuario. Si la URL es `https`, comprueba además que **no** es pública: `GIT_TERMINAL_PROMPT=0 git -c credential.helper= ls-remote <url>` debe fallar por falta de acceso; si responde sin credenciales, el repositorio es público y se rechaza («tiene que ser privado»). Con `ssh` basta con que `ls-remote` funcione.
+- Si falla la verificación (no existe, sin acceso, público), dilo con el error exacto y vuelve a pedir la URL. No se avanza.
+- Con la URL verificada, el handoff se genera **dentro de un clon de ese repositorio** (no en una carpeta suelta) y se sube a él al entregar. Commits en inglés con formato `<type>: <description>` y sin force push.
+- Anota la URL en el `CLAUDE.md` del handoff, para que cualquiera que lo abra sepa dónde vive.
+
+## Paso 1: comprobar actualizaciones (siempre, justo después del paso 0)
+Con el repositorio verificado, antes de preguntar nada más, mira si hay cambios nuevos en el repo de la skill (la carpeta base de esta skill):
 ```
 git -C <carpeta-de-la-skill> fetch origin --quiet
 git -C <carpeta-de-la-skill> status -sb
