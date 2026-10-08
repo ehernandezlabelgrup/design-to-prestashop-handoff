@@ -9,9 +9,14 @@ Hace, en este orden, y se detiene en el primer fallo:
   4. Primer commit local «chore: initial project snapshot» y comprueba que no hay secretos en lo preparado.
 NO sube nada: el primer push lo hace `tools/steps.py approve prep-git` cuando el maquetador da su OK.
 
+Si la raíz de PrestaShop es de otro usuario (p. ej. www-data) y no se puede escribir en ella, el script no toca nada: imprime los
+`sudo install` exactos para crear `.git`, `.gitignore` y la carpeta del handoff a nombre del usuario actual. Se añade `safe.directory`
+a la configuración git del usuario si hace falta y se cierra `.git` al acceso web (`.git/.htaccess`).
+
 Uso: git_setup.py --ps-root /var/www/html/tienda --url <git-url> --theme-slug <slug>
 """
 import argparse
+import getpass
 import os
 import subprocess
 import sys
@@ -24,11 +29,44 @@ SECRETS = ("app/config/parameters.php", "app/config/parameters.yml", "config/set
 
 
 def git(root: Path, *args: str, env=None, check=True) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, check=check, env=env)
+    result = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, env=env)
+    if check and result.returncode != 0:
+        fail(f"git {' '.join(args)} falló:\n{result.stderr.strip() or result.stdout.strip()}")
+    return result
 
 
 def fail(message: str):
     sys.exit(f"✗ {message}")
+
+
+def preflight_permissions(root: Path, slug: str):
+    """Comprueba que el usuario actual puede escribir lo que el paso 0 necesita; si no, dice qué hacer y no toca nada."""
+    me = getpass.getuser()
+    needs = [(root / ".git", True), (root / ".gitignore", False), (root / f"handoff-{slug}", True)]
+    blocked = []
+    for path, is_dir in needs:
+        ok = os.access(path, os.W_OK) if path.exists() else os.access(root, os.W_OK)
+        if not ok:
+            blocked.append((path, is_dir))
+    if not blocked:
+        return
+    cmds = [f"sudo install {'-d -m 775' if is_dir else '-m 664'} -o {me} -g www-data {'' if is_dir else '/dev/null '}{path}"
+            for path, is_dir in blocked]
+    fail(f"el usuario {me} no puede escribir en {root} (es de otro usuario). Crea lo necesario a tu nombre y vuelve a ejecutarlo:\n  "
+         + "\n  ".join(cmds))
+
+
+def ensure_safe_directory(root: Path):
+    probe = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    if "dubious ownership" in probe.stderr:
+        subprocess.run(["git", "config", "--global", "--add", "safe.directory", str(root)], check=True)
+        print(f"✓ safe.directory añadido a tu git para {root} (la raíz es de otro usuario)")
+
+
+def block_web_access(root: Path):
+    """Un .git bajo la raíz web se sirve por HTTP: se cierra con un .htaccess dentro de .git (git no lo versiona)."""
+    (root / ".git" / ".htaccess").write_text("Require all denied\n", encoding="utf-8")
+    print("✓ .git cerrado al acceso web (.git/.htaccess)")
 
 
 def verify_url(url: str):
@@ -76,8 +114,12 @@ def main():
     if not (root / "config" / "config.inc.php").is_file():
         fail(f"{root} no parece una instalación de PrestaShop")
     verify_url(args.url)
+    preflight_permissions(root, args.theme_slug)
+    ensure_safe_directory(root)
     if git(root, "rev-parse", "--is-inside-work-tree", check=False).returncode != 0:
         git(root, "init", "-q")
+    ensure_safe_directory(root)  # tras el init: ahora sí hay repositorio y git comprueba su propietario
+    block_web_access(root)
     if git(root, "rev-parse", "--show-toplevel").stdout.strip() != str(root):
         fail(f"{root} está dentro de otro repositorio git; el proyecto tiene que ser la raíz de PrestaShop")
     branch = f"handoff/{args.theme_slug}"
