@@ -1,0 +1,42 @@
+# >>> design-to-prestashop-handoff (no editar este bloque a mano)
+# Dependencias y secretos: NUNCA se suben (el repo es privado, pero no es una caja fuerte).
+vendor/
+node_modules/
+/app/config/parameters.php
+/app/config/parameters.yml
+/config/settings.inc.php
+.env
+.env.*
+*.pem
+*.key
+
+# Generado en ejecución o que PrestaShop recrea
+/var/
+/cache/
+/themes/*/cache/
+/translations/cache/
+/img/tmp/
+/log/
+/app/logs/
+/app/cache/
+*.log
+*.map
+*.zip
+*.tar
+*.tar.gz
+*.sql
+*.sql.gz
+
+# Contenido subido o generado a partir del catálogo (se regenera con los datos demo o lo carga el cliente)
+/img/p/
+/img/c/
+/img/m/
+/img/su/
+/img/scenes/
+/upload/
+/download/
+
+# Sistema
+.DS_Store
+Thumbs.db
+# <<< design-to-prestashop-handoff

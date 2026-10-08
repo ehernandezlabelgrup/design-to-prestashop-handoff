@@ -4,6 +4,7 @@
 Uso: validate.py ./handoff-tienda
 """
 import json
+import subprocess
 import re
 import sys
 from pathlib import Path
@@ -143,6 +144,23 @@ def check_steps(root: Path, errors: list):
             errors.append(f"{label}: falta route")
 
 
+def check_git(root: Path, errors: list):
+    """El handoff vive dentro del repositorio privado del paso 0 y ese repositorio no sube vendor ni parámetros."""
+    steps_file = root / "design" / "steps.json"
+    if steps_file.is_file():
+        ids = [s["id"] for s in json.loads(steps_file.read_text(encoding="utf-8")).get("steps", [])]
+        if not ids or ids[0] != "prep-git":
+            errors.append("steps.json: el primer paso tiene que ser prep-git (repositorio git privado, paso 0)")
+    top = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    if top.returncode != 0:
+        errors.append("el handoff no está dentro de un repositorio git: ejecuta scripts/git_setup.py (paso 0) y genera el handoff dentro de la raíz del proyecto")
+        return
+    for path in ("vendor/x", "app/config/parameters.php", ".env"):
+        ignored = subprocess.run(["git", "-C", top.stdout.strip(), "check-ignore", "-q", path])
+        if ignored.returncode != 0:
+            errors.append(f".gitignore: «{path}» no está ignorado y se subiría al repositorio")
+
+
 def check_interaction_coverage(root: Path, errors: list):
     """Cada interacción de docs/03 (título en negrita al inicio de línea) debe figurar en la tabla de cobertura de docs/09."""
     docs3, docs9 = root / "docs" / "03-interacciones.md", root / "docs" / "09-plan-por-pasos.md"
@@ -168,7 +186,7 @@ def main():
         sys.exit(__doc__)
     root = Path(sys.argv[1])
     errors = []
-    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content, check_demo_data, check_steps, check_interaction_coverage):
+    for check in (check_files, check_placeholders, check_tokens, check_assets, check_logo_and_content, check_demo_data, check_steps, check_git, check_interaction_coverage):
         check(root, errors)
     for err in errors:
         print("✗", err)

@@ -22,6 +22,15 @@ def slug(route: str) -> str:
 
 def prep_steps(with_demo: bool) -> list:
     steps = [
+        {"id": "prep-git", "title": "Repositorio git privado (paso 0)", "kind": "prep", "dependsOn": [],
+         "summary": "Primer paso de todos. El repositorio git privado del proyecto ya está verificado y preparado con scripts/git_setup.py: la tienda ENTERA, sin vendor ni "
+                    "parámetros (app/config/parameters.php, .env), en la rama handoff/<tema> y con un primer commit local. Al aprobar este paso se hace el primer push. "
+                    "Desde aquí, cada paso aprobado hace commit + push automáticamente (tools/steps.py approve). Sin este paso no se puede empezar ningún otro.",
+         "docs": ["docs/00-reglas-equipo.md"],
+         "acceptance": ["El repositorio es privado (verificado con git ls-remote, y sin credenciales no responde)",
+                        "El .gitignore excluye vendor/, app/config/parameters.php, .env, la caché y el contenido generado",
+                        "Existe la rama handoff/<tema> con el commit «chore: initial project snapshot» y el remoto origin apunta al repositorio",
+                        "No hay contraseñas ni claves en lo preparado (git ls-files no incluye parameters.php ni .env)"]},
         {"id": "prep-inventario", "title": "Inventario inicial de la tienda", "kind": "prep", "dependsOn": [],
          "summary": "ANTES de tocar nada: sudo -u www-data php scripts/ps_inventory.php --ps-root=… --theme=… --out=/tmp/inicial.json --own-prefix=… y copiarlo a "
                     "design/inventario-inicial.json. Sirve para que el README de entrega diga qué módulos se instalaron o activaron y qué configuración cambió. "
