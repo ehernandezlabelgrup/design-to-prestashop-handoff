@@ -4,7 +4,7 @@
 Hace, en este orden, y se detiene en el primer fallo:
   1. Verifica la URL: `git ls-remote` con las credenciales del usuario. Si es https, comprueba además que SIN credenciales
      no responde (si responde, el repositorio es público y se rechaza).
-  2. `git init` en la raíz de PrestaShop si aún no es un repositorio, y añade el bloque de `templates/gitignore.tmpl` al .gitignore.
+  2. `git init` en la raíz de PrestaShop si aún no es un repositorio, y añade el bloque de `templates/gitignore.block` al .gitignore.
   3. Configura `origin` y la rama de trabajo `handoff/<theme-slug>` (nunca toca main ni hace force push).
   4. Primer commit local «chore: initial project snapshot» y comprueba que no hay secretos en lo preparado.
 NO sube nada: el primer push lo hace `tools/steps.py approve prep-git` cuando el maquetador da su OK.
@@ -83,7 +83,7 @@ def verify_url(url: str):
 
 
 def write_gitignore(root: Path):
-    block = (SKILL_ROOT / "templates" / "gitignore.tmpl").read_text(encoding="utf-8")
+    block = (SKILL_ROOT / "templates" / "gitignore.block").read_text(encoding="utf-8")
     target = root / ".gitignore"
     current = target.read_text(encoding="utf-8") if target.is_file() else ""
     if BEGIN in current:
