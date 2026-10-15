@@ -74,6 +74,8 @@ def install_tools(out: Path):
     tools.mkdir(exist_ok=True)
     for name in ("steps.py", "compare.py", "ps_seed_demo.php", "ps_set_translations.php"):
         shutil.copy2(SKILL_ROOT / "scripts" / name, tools / name)
+    # Logo común de los módulos propios: se copia como logo.png en la raíz de cada módulo
+    shutil.copy2(SKILL_ROOT / "assets" / "module-logo.png", tools / "module-logo.png")
 
 
 def build_steps(work: Path, out: Path, demo: str):
