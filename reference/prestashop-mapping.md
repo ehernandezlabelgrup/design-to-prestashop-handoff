@@ -60,6 +60,14 @@ Reglas de uso:
 - **Tras redimensionar**, regenera las miniaturas borrando las anteriores.
 - **Excepción**: un uso del diseño sin equivalente (p. ej. un banner de sección con proporción propia) puede llevar un tipo nuevo, con el motivo en `validation/decisiones.md`.
 
+## Plantillas del hijo y formatos de imagen
+
+Verificado en una instalación 9.2.0 (solo lectura).
+
+- **`{extends file='parent:…'}`**: el prefijo `parent:` apunta a la plantilla del tema padre, así el hijo redefine solo los `{block name='…'}` que cambia y hereda el resto. Ejemplo: `{extends file='parent:cms/page.tpl'}`. Las plantillas de Hummingbird exponen bloques (p. ej. `product_miniature_item`, `product_miniature_top`, `product_miniature_bottom` en la tarjeta de producto): mira los bloques del padre antes de copiar nada. Copia completa solo si no hay bloque donde enganchar.
+- **`PS_IMAGE_FORMAT`**: cadena con los formatos separados por comas. Valores válidos: `jpg`, `png`, `webp`, `avif` (`ImageFormatConfiguration`). `jpg` se genera siempre; el resto se suma. Calidad con `PS_IMAGE_QUALITY` y `PS_AVIF_QUALITY`.
+- **AVIF depende del servidor**: se genera con `imageavif()` de GD; si no existe, PrestaShop no lo genera. Comprueba antes de activarlo.
+
 ## Problemas conocidos de PrestaShop 9.2 (verificados en 9.2.0)
 - La traducción es-ES de «Subcategories for %s» (`ShopThemeCatalog`) trae un `%` sobrante (`Subcategorías de %s%`) y rompe con 500 todas las páginas de categoría (la plantilla de `ps_categorytree` hace `sprintf`). Se corrige con una traducción personalizada (tabla `translation` o Internacional > Traducciones), sin tocar el core.
 - `bin/console cache:clear` con 512 MB de memoria se queda sin ella: `php -d memory_limit=-1 bin/console cache:clear`.
