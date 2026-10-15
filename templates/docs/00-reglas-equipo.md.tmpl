@@ -29,6 +29,7 @@ Se usa el logo del diseño, que está en `assets/logo/`. No se redibuja ni se es
 - **Los módulos los instala y configura Claude, no el maquetador** (con `bin/console prestashop:module …` y scripts PHP). El maquetador solo revisa el resultado.
 - No se toca el core. Se usan hooks, overrides de plantilla del tema y módulos.
 - Presentación en el tema, funcionalidad en módulos propios, contenido editable en el Back Office.
+- **Todo módulo propio (`jc_*`) lleva el logo común.** Al crearlo, copia `tools/module-logo.png` como `logo.png` en la raíz del módulo (`modules/<modulo>/logo.png`), que es el icono que PrestaShop muestra en el listado de módulos. Nunca se deja un módulo sin `logo.png` ni con el icono por defecto.
 - Sin librerías innecesarias (carruseles, UI kits). JS nativo, diferido y por componente. Sin módulos de terceros para resolver detalles visuales.
 
 ## 4. Forma de trabajar
