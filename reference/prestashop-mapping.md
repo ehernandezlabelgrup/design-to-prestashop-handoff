@@ -33,6 +33,33 @@ Hummingbird desactiva `blockwishlist` en su `theme.yml`: si el diseño tiene fav
 - Receta que funciona: copiar el `theme.yml` del padre, poner `parent: <padre>`, cambiar `name`/`display_name`/`version`/`author` y añadir los tipos propios (con `image_fitment: crop|fit|bound`) al final de `global_settings.image_types`.
 - Activarlo: `php bin/console prestashop:theme:enable <tema>` (como el usuario del servidor web). Crea los tipos de imagen en la base de datos. Se revierte activando el tema anterior.
 
+## Tipos de imagen de Hummingbird (reutilizar, no inventar)
+
+Verificado leyendo `themes/hummingbird/config/theme.yml` y las plantillas de Hummingbird 2.1.2. Si la versión del padre es otra, repite la comprobación en la instalación antes de fiarte de la tabla.
+
+| Tipo del padre | Tamaño por defecto | Dónde lo pinta Hummingbird |
+|---|---|---|
+| `home_default` | 250×250 | Tarjeta de producto (`product-image.tpl`), miniaturas y modal de la ficha, JSON-LD |
+| `default_sm` · `default_md` · `default_lg` | 216 · 261 · 336 | `srcset` de la tarjeta de producto; `default_sm` también en el resumen de carrito del checkout |
+| `default_xs` | 160×160 | Miniaturas de la ficha, packs, detalle de pedido y devoluciones |
+| `default_xl` | 400×400 | Miniaturas grandes de la ficha |
+| `product_main` · `product_main_2x` | 720 · 1440 | Imagen principal de la ficha y su modal |
+| `medium_default` | 452×452 | Modal «añadido al carrito» |
+| `large_default` | 800×800 | Modal de comentarios de producto |
+| `cart_default` | 125×125 | Sin uso directo en las plantillas del tema (lo piden módulos de terceros) |
+| `small_default` | 98×98 | Listado de marcas y proveedores |
+| `category_default` | 180×180 | Subcategorías |
+| `category_cover` · `category_cover_2x` | 1000×200 · 2000×400 | Cabecera de categoría |
+| `stores_default` | 287×160 | Tiendas |
+| `manufacturer_product_page` | 98×98 (`bound`) | Logo de la marca en los detalles de la ficha |
+
+Reglas de uso:
+- **Un tipo sirve a varios sitios**: redimensionar `home_default` o `default_sm` cambia todo lo de la columna «Dónde». Revisa esos sitios antes de tocarlo y comprueba el resultado en cada uno.
+- **Proporción**: todos los tipos de la entidad `products` llevan la proporción de `product_main`, para que una misma foto no se recorte distinto según la pantalla.
+- **El `theme.yml` del hijo es una copia completa del padre** (la mezcla de PrestaShop es superficial): si falta un tipo, `theme:enable` lo borra.
+- **Tras redimensionar**, regenera las miniaturas borrando las anteriores.
+- **Excepción**: un uso del diseño sin equivalente (p. ej. un banner de sección con proporción propia) puede llevar un tipo nuevo, con el motivo en `validation/decisiones.md`.
+
 ## Problemas conocidos de PrestaShop 9.2 (verificados en 9.2.0)
 - La traducción es-ES de «Subcategories for %s» (`ShopThemeCatalog`) trae un `%` sobrante (`Subcategorías de %s%`) y rompe con 500 todas las páginas de categoría (la plantilla de `ps_categorytree` hace `sprintf`). Se corrige con una traducción personalizada (tabla `translation` o Internacional > Traducciones), sin tocar el core.
 - `bin/console cache:clear` con 512 MB de memoria se queda sin ella: `php -d memory_limit=-1 bin/console cache:clear`.
