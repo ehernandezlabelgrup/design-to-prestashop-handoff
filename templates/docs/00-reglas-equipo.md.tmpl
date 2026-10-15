@@ -17,7 +17,7 @@ Ningún texto visible va escrito a pelo. Incluye el contenido de botones, títul
 - **JS:** el JavaScript no contiene cadenas visibles. Se pasan desde Smarty o PHP con `data-*` o con `Media::addJsDef()` ya traducidas.
 - Dominios del tema: `Shop.Theme.*`. Dominios de módulos: `Modules.<Nombre>.Shop|Admin`. Reutiliza los dominios y cadenas que ya existan en el core y en el tema base antes de crear los nuevos.
 - Una cadena, un significado: no concatenes frases traducidas; usa variables.
-- El texto fuente va en inglés, que es la convención de PrestaShop, y se traduce desde Internacional > Traducciones. Confirma el idioma fuente con el equipo antes de empezar.
+- **El texto fuente (el de `{l}` y `trans()`) va SIEMPRE en inglés**, aunque el diseño esté en español. El texto del diseño es la traducción al idioma de la tienda, no la cadena fuente. Nunca se escribe el texto en español dentro de la plantilla, del PHP ni del JS. Se registra con `tools/ps_set_translations.php` (clave = inglés, valor = texto exacto del diseño).
 - El **contenido editable** (CMS, bloques de texto, banners) no son cadenas de interfaz: se gestiona desde el Back Office, multiidioma, no con `{l}`.
 - **Páginas legales y de contenido** (aviso legal, privacidad, cookies, condiciones, envíos, FAQ, sobre nosotros): son páginas **CMS** editables desde el Back Office, no cadenas `{l}`. El texto de ejemplo del diseño está en `design/content/*.html`; se usa para sembrar las páginas CMS (multiidioma) y el cliente lo sustituye por el texto jurídico definitivo.
 - `docs/05-textos.md` lista los textos del diseño con el dominio propuesto. Es una propuesta que hay que revisar.
