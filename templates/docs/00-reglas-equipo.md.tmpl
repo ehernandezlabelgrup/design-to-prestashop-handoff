@@ -39,6 +39,7 @@ Se usa el logo del diseño, que está en `assets/logo/`. No se redibuja ni se es
 - **Cada elemento se maqueta completo en su paso** (aspecto, comportamiento y todos sus estados). No se deja una parte para otro paso salvo que dependa de datos o páginas que todavía no existen. En concreto, el **buscador es parte del header**: cuando se hace el header se hace el buscador entero (capa, «Novedades», filtro en vivo, estados vacíos, teclado), igual que el menú móvil y el contador de la cesta.
 - Se copian los valores exactos del diseño; no se redondean.
 - **Código, comentarios y nombres en inglés.** Variables, constantes, clases, ids, funciones, comentarios y nombres de ficheros y de módulos van en inglés. Solo el texto visible del diseño (su traducción) y los documentos de handoff están en el idioma del equipo.
+- **Base de datos sin SQL a mano.** Las lecturas se construyen con `new DbQuery()` (`select`, `from`, `where`…) y las escrituras van por `Db::insert()`, `Db::update()` y `Db::delete()`, que añaden el prefijo de tablas y escapan los valores. Nunca se concatena SQL con `_DB_PREFIX_` ni se usa `execute('UPDATE …')` a mano. Vale para módulos y para scripts PHP.
 - Commits en inglés con el formato `<type>: <description>`.
 
 ## 5. Calidad
